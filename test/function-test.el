@@ -1,5 +1,3 @@
-;;; -*- Mode: Emacs-Lisp -*-
-
 ;; This file is not part of GNU Emacs
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -64,3 +62,67 @@
 ;;   4x
 ;; empty line between function
 ;;   4x
+
+(defmacro with-replica-buffer (original-buffer &rest body)
+  "Execute BODY in a temp buffer with same contents as ORIGINAL-BUFFER."
+  (declare (indent 1) (debug t))
+  `(let ((buf ,original-buffer))
+     (with-temp-buffer
+       (insert-buffer-substring buf)
+       (progn ,@body))))
+
+(defun buffer-fancy-substring (region &optional delimiter context-lines)
+  ""
+  (with-replica-buffer (current-buffer)
+    (let ((delimiter     (or delimiter "█"))
+          (context-lines (or context-lines 1)))
+      (let ((beg (save-excursion
+                   (goto-char (car region))
+                   ;; (unless (eq (point) (point-at-eol))
+                   ;;   (delete-char 1))
+                   (insert delimiter)
+                   (beginning-of-line (1+ (- context-lines)))
+                   (point)))
+            (end (save-excursion
+                   (goto-char (cadr region))
+                   ;; (when (eq (point) (point-at-eol))
+                   ;;   (goto-char (1- (point))))
+                   (insert delimiter)
+                   (end-of-line (1+ context-lines))
+                   (point))))
+        (buffer-substring beg end)))))
+
+(defun run-test (fixture-path search-string goto-beg-of-match fcall expected-region)
+  "docstring"
+
+  ;; setup buffer
+  (with-temp-buffer
+    (insert-file-contents fixture-path)
+    ;; go to intended point
+    (search-forward search-string)
+    (when goto-beg-of-match
+      (goto-char (match-beginning 0)))
+
+    ;; print buffer section with point and expected region
+    ;; (insert "█")
+    (message
+     "%s\n...\n%s\n...\n"
+     fcall
+     (buffer-fancy-substring expected-region "█"))
+    ;; (delete-char 1)
+
+    ;; check if returned region equals expected
+    ;;   if not, print buffer section with point and returned region
+    (if-let ((returned-region (eval fcall)))
+        (if (equal returned-region expected-region)
+            (message "Pass")
+          (message "Failed: unexpected region\n...\n%s\n...\n"
+                   (buffer-fancy-substring expected-region "?")))
+      (message "Failed: returned nil region"))
+    ))
+
+(run-test "./fixtures/Entity.cs"
+          "Id = Guid.NewGuid()"
+          t
+          '(mabo3n/csharp--get-function-region nil)
+          '(421 582))
