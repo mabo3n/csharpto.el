@@ -1,8 +1,3 @@
-;; FIXME: Don't select class/interface preceding function
-;; TODO: Support COUNT
-;; TODO: Support comments/attributes
-;; TODO: Implement `body-only'
-
 (defun mabo3n/csharp--get-function-region
     (&optional include-around)
   "Return (BEG END) of function under point.
