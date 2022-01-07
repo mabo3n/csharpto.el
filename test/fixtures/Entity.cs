@@ -21,7 +21,7 @@ namespace MyNamespace.Domain.Entities
             Name = name;
         }
 
-        int OneLiner() => 1 + 2 + 3 + 4 + 5;
+        int OneLiner() => 1 + 2 + 3 + 4 + 5; 
 
 
         void Log(
@@ -31,14 +31,18 @@ namespace MyNamespace.Domain.Entities
 
         public int SomeMethod(int a, int b) {
             a++;
+
             b++;
+
             return a + b;
+
         }
+
+
 
         public IEnumerable<char> GetSequence()
             => this
             .GetHashCode()
             .ToString();
-
     }
 }
