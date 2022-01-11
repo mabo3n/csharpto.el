@@ -1,19 +1,10 @@
-;; This file is not part of GNU Emacs
+;;; csharpto-function-test.el --- Tests for csharpto-function.el -*- lexical-binding: t -*-
 
-;; This program is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;;; Commentary:
 
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;;; Code:
 
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-(require 'csharpto-function "../function.el")
+(require 'csharpto-function)
 
 (defun csharpto--test-log-message (format-string &rest args)
   "Log FORMAT-STRING with ARGS into the test run buffer."
@@ -318,3 +309,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
           '(csharpto-get-function-region t)
           '(888 1010))
+
+(provide 'csharpto-function-test)
+
+;;; csharpto-function-test.el ends here
