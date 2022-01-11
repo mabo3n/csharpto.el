@@ -1,13 +1,9 @@
 * New
 ** TODO FIXME: Don't select class/interface preceding function
-   [[file:~/repos/csharp-text-objects/src/function.el]]
    [2021-12-27 Mon 21:26]
 ** TODO Support COUNT
-   [[file:~/repos/csharp-text-objects/src/function.el]]
    [2021-12-27 Mon 21:26]
 ** TODO Support comments/attributes
-   [[file:~/repos/csharp-text-objects/src/function.el]]
    [2021-12-27 Mon 21:27]
 ** TODO Implement `body-only'
-   [[file:~/repos/csharp-text-objects/src/function.el]]
    [2021-12-27 Mon 21:27]
