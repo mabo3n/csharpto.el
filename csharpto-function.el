@@ -1,4 +1,8 @@
-(defun mabo3n/csharp--get-function-region
+;;; csharpto-function.el --- C# function text object -*- lexical-binding: t -*-
+
+;;; Code:
+
+(defun csharpto-get-function-region
     (&optional include-around)
   "Return (BEG END) of function under point.
 
@@ -122,4 +126,6 @@ It should work in most cases given:
                             `(,beg-empty-lines
                               ,(match-end end-of-scope-group)))))))))))))
 
-(provide 'mabo3n/csharp-text-objects--function)
+(provide 'csharpto-function)
+
+;;; csharpto-function.el ends here
