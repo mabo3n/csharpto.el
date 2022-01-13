@@ -74,7 +74,7 @@ It should work in most cases given:
                      (match-data)))
                (next-fun-match-data
                 (and (goto-char
-                      (or (match-end header-group)
+                      (or (and (match-end 0) (1- (match-end header-group)))
                           ;; go to beg of empty lines to include
                           ;; all of them in the match
                           (and (re-search-backward (rx bol (0+ space) ?\n) nil t)
