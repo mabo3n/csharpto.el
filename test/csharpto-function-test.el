@@ -334,27 +334,6 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           '(csharpto-get-function-region nil)
           '(128 285))
 
-
-;; singlefun
-;;   4x
-;; singlefun with spaces around
-;;   4x
-;; previousfun
-;;   4x
-;; previousfun with spaces before
-;;   4x
-;; afterfun
-;;   4x
-;; afterfun with spaces after
-;;   4x
-
-;; empty line before function
-;;   4x
-;; empty line after function
-;;   4x
-;; empty line between function
-;;   4x
-
 (provide 'csharpto-function-test)
 
 ;;; csharpto-function-test.el ends here
