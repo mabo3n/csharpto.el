@@ -318,7 +318,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :cursor-column 'beg-of-line)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(127 285)))
-          '(csharpto--test-buffer-setup "./fixtures/SingleFunction.cs" "^.+SomeFunction" t)
+          '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
           '(csharpto-get-function-region t)
           '(127 285))
 
@@ -330,9 +330,30 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :cursor-column 'beg-of-line)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(128 285)))
-          '(csharpto--test-buffer-setup "./fixtures/SingleFunction.cs" "^.+SomeFunction" t)
+          '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
           '(csharpto-get-function-region nil)
           '(128 285))
+
+
+;; singlefun
+;;   4x
+;; singlefun with spaces around
+;;   4x
+;; previousfun
+;;   4x
+;; previousfun with spaces before
+;;   4x
+;; afterfun
+;;   4x
+;; afterfun with spaces after
+;;   4x
+
+;; empty line before function
+;;   4x
+;; empty line after function
+;;   4x
+;; empty line between function
+;;   4x
 
 (provide 'csharpto-function-test)
 
