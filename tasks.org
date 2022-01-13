@@ -1,13 +1,6 @@
 * New
-** TODO FIXME: Don't select class/interface preceding function
-   [2021-12-27 Mon 21:26]
-** TODO Support COUNT
-   [2021-12-27 Mon 21:26]
-** TODO Support comments/attributes
-   [2021-12-27 Mon 21:27]
-** TODO Implement `body-only'
-   [2021-12-27 Mon 21:27]
 ** TODO Support comments
-   [2022-01-11 Tue 15:26]
+** TODO Implement COUNT
+** TODO Implement `body-only'
 ** TODO Support interfaces
-   [2022-01-11 Tue 15:27]
+** TODO Support attributes
