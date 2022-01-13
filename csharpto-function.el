@@ -22,6 +22,7 @@ It should work in most cases given:
          (header-group 2)
          (indent-group 3)
          (open-delimiter-group 4)
+         (class-or-namespace-flag-group 7)
          (header-regexp
           (rx-to-string
            `(seq
@@ -32,6 +33,12 @@ It should work in most cases given:
              (group-n ,header-group
                       (seq (group-n ,indent-group
                                     (0+ space))
+                           ;; (opt (group-n ,class-or-namespace-flag-group
+                           ;;               (or "namespace "
+                           ;;                   (seq (repeat 0 3
+                           ;;                                (seq (1+ (syntax word))
+                           ;;                                         (1+ " ")))
+                           ;;                        "class "))))
                            (seq alpha (0+ nonl) (not (any ?\n ?\;)))
                            (repeat 0 10 (seq ?\n
                                              (backref ,indent-group)
