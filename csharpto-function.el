@@ -22,11 +22,11 @@ It should work in most cases given:
          (header-group 2)
          (indent-group 3)
          (open-delimiter-group 4)
-         (class-or-namespace-flag-group 7)
          (header-regexp
           (rx-to-string
            `(seq
-             (seq (or buffer-start (not (any space ?\n)))
+             (seq (or buffer-start
+                      (not (any space ?\n)))
                   (0+ space) ?\n)
              (group-n ,preceding-blank-lines-group
                       (0+ (seq (0+ space) ?\n)))
@@ -94,38 +94,38 @@ It should work in most cases given:
            (t
             (throw 'region '())))
 
-          (when-let ((beg-empty-lines   (match-beginning preceding-blank-lines-group))
-                     (beg-header-line   (match-beginning header-group))
-                     (end-header        (match-end       header-group))
-                     (indent-string     (match-string-no-properties indent-group))
-                     (open-scope-string (match-string-no-properties open-delimiter-group)))
+          (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
+                      (header-line-beg   (match-beginning header-group))
+                      (indent-string     (match-string-no-properties indent-group))
+                      (open-scope-string (match-string-no-properties open-delimiter-group))
 
-            ;; This assumes there's no other declarations between functions
-            (goto-char end-header)
+                      ;; This assumes there's no other declarations between functions
+                      (_ (goto-char (match-end header-group)))
+                      (end-of-scope-regexp (funcall build-end-of-scope-regexp
+                                                    indent-string
+                                                    open-scope-string))
+                      (_ (re-search-forward end-of-scope-regexp nil t))
 
-            (let* ((end-of-scope-regexp
-                    (funcall build-end-of-scope-regexp
-                             indent-string
-                             open-scope-string)))
+                      (succeeding-blank-lines-beg (match-beginning succeeding-blank-lines-group))
+                      (succeeding-blank-lines-end (match-end succeeding-blank-lines-group)))
 
-              (when (re-search-forward end-of-scope-regexp nil t)
-                (if (>= p (match-beginning succeeding-blank-lines-group))
-                    (throw 'region `(,(match-beginning succeeding-blank-lines-group)
-                                     ,(match-end       succeeding-blank-lines-group)))
-                  (if (>= p beg-header-line)
-                      (throw 'region
-                              `(,(if (and include-around
-                                          (not (> (length (match-string
-                                                           succeeding-blank-lines-group))
-                                                  0)))
-                                     beg-empty-lines
-                                   beg-header-line)
-                                ,(if include-around
-                                     (match-end 0)
-                                   (match-end end-of-scope-group))))
-                    (throw 'region
-                            `(,beg-empty-lines
-                              ,(match-end end-of-scope-group)))))))))))))
+            (if (>= p succeeding-blank-lines-beg)
+                (throw 'region `(,succeeding-blank-lines-beg
+                                 ,succeeding-blank-lines-end))
+              (if (>= p header-line-beg)
+                  (throw 'region
+                         `(,(if (and include-around
+                                     (not (> (length (match-string
+                                                      succeeding-blank-lines-group))
+                                             0)))
+                                preceding-blank-lines-beg
+                              header-line-beg)
+                           ,(if include-around
+                                (match-end 0)
+                              (match-end end-of-scope-group))))
+                (throw 'region
+                       `(,preceding-blank-lines-beg
+                         ,(match-end end-of-scope-group)))))))))))
 
 (provide 'csharpto-function)
 
