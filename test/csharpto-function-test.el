@@ -90,18 +90,23 @@ function `csharpto--test-buffer-fancy-substring'."
     (:scope-type    . ((expression   . "The function is expression-bodied =>")
                        (brackets     . "The function body is defined with brackets { }")))
     (:scope-lf      . "There's a line feed before opening the function scope")
-    (:cursor-line   . ((preceding-blank . "The cursor lies in blank lines before the function")
+    (:attributes    . ((single-preceding     .  "The function has a preceding attribute")
+                       (single-inline        . "The function has an inline attribute")
+                       (multiple-preceding   . "The function has multiple preceding attributes")
+                       (multiple-inline      . "The function has multiple inline attributes")))
+    (:cursor-line   . ((preceding-blank      . "The cursor lies in blank lines before the function")
+                       (attributes   . "The cursor lies in attribute declarations before the function")
                        (header       . "The cursor lies in the function header")
                        (beg-of-scope . "The cursor lies in the beginning of function scope")
                        (body         . "The cursor lies in the function body")
                        (end-of-scope . "The cursor lies in the end of function scope")
                        (succeeding-blank . "The cursor lies in blank lines succeeding function")
-                       (blank        . "The cursor lies in blank lines between functions")))
-    (:cursor-column . ((beg-of-line  . "The cursor lies in the beginning of line")
+                       (blank            . "The cursor lies in blank lines between functions")))
+    (:cursor-column . ((beg-of-line      . "The cursor lies in the beginning of line")
                        (preceding-blank  . "The cursor lies in the indentation")
-                       (text         . "The cursor lies in the text")
+                       (text             . "The cursor lies in the text")
                        (succeeding-blank . "The cursor lies in the blank spaces ending the line")
-                       (end-of-line  . "The cursor lies in the end of line"))))
+                       (end-of-line      . "The cursor lies in the end of line"))))
   "Mapping between test prop values and their textual description.")
 
 (defun csharpto--test-generate-sentences (&rest plist)
@@ -333,6 +338,47 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
           '(csharpto-get-function-region nil)
           '(128 290))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :header        'single-line
+                            :scope-type    'brackets
+                            :attributes    'single-inline
+                            :cursor-line   'header
+                            :cursor-column 'end-of-line)
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(660 983)))
+          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "ChangeName() {" nil)
+          '(csharpto-get-function-region nil)
+          '(660 983))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :header        'multi-line
+                            :scope-type    'expression
+                            :scope-lf      t
+                            :attributes    'multiple-preceding
+                            :cursor-line   'attributes
+                            :cursor-column 'beg-of-line)
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(177 659)))
+          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "^.+\\[Theory\\]" t)
+          '(csharpto-get-function-region nil)
+          '(177 659))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :header        'multi-line
+                            :scope-type    'expression
+                            :scope-lf      t
+                            :attributes    'multiple-preceding
+                            :cursor-line   'body
+                            :cursor-column 'text)
+                    :when (format "I call %s" '(csharpto-get-function-region t))
+                    :then (format "%s should be returned" '(177 660)))
+          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "() => new" nil)
+          '(csharpto-get-function-region t)
+          '(177 660))
 
 (provide 'csharpto-function-test)
 
