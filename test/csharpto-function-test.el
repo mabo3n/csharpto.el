@@ -74,15 +74,16 @@ REGIONS has form `((BEG END)...)'."
 
 Format and forward POINT, REGION and EXPECTED-REGION to
 function `csharpto--test-buffer-fancy-substring'."
-  (let ((overlap (csharpto--test-region-overlap region expected-region)))
+  (let* ((overlap (csharpto--test-region-overlap region expected-region))
+         (regions (list `(,@expected-region  (:background "LightGoldenrod3"))
+                        `(,@region           (:background "IndianRed2"))
+                        (when overlap
+                          `(,@overlap        (:background "SeaGreen2")))
+                        `(,point ,(1+ point) (:background "gray"))))
+         (regions (-keep #'identity regions)))
     (csharpto--test-log-message
      "...\n%s\n..."
-     (csharpto--test-buffer-fancy-substring
-      (list `(,@expected-region  (:background "LightGoldenrod3"))
-            `(,@region           (:background "IndianRed2"))
-            `(,@overlap          (:background "SeaGreen2"))
-            `(,point ,(1+ point) (:background "gray")))
-      1))))
+     (csharpto--test-buffer-fancy-substring regions 1))))
 
 (defvar csharpto--test-docstrings-alist
   '((:header        . ((single-line  . "The function has a single-line header")
