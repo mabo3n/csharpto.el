@@ -21,31 +21,52 @@ It should work in most cases given:
   (let* ((preceding-blank-lines-group 1)
          (header-group 2)
          (indent-group 3)
-         (open-delimiter-group 4)
+         (attributes-group 4)
+         (signature-group 5)
+         (open-delimiter-group 6)
          (header-regexp
           (rx-to-string
            `(seq
+             ;; As emacs' backward search stops at first match, it'll never match
+             ;; optional patterns in the beginning, even if they are present.
+             ;; We have to guess and [non-optionally] match something before
+             ;; the header and its preceding blank lines, so everything below
+             ;; is included in the match
              (seq (or buffer-start
-                      (not (any space ?\n)))
+                      ;; FIXME Don't match attribute + comments e.g.
+                      ;; [Attribute] // Comment not ending with ?\].
+                      ;; Below hangs while matching:
+                      ;;
+                      ;; (seq bol (0+ space)
+                      ;;      (not (any space ?\n ?\[ ?\/))
+                      ;;      (0+ nonl) (not (any space ?\n ?\])) eol)
+                      ;;
+                      ;; Workaround:
+                      (not (any space ?\n ?\]))
+                      )
                   (0+ space) ?\n)
              (group-n ,preceding-blank-lines-group
                       (0+ (seq (0+ space) ?\n)))
              (group-n ,header-group
-                      (seq (group-n ,indent-group
+                      (group-n ,indent-group
+                               (0+ space))
+                      (group-n ,attributes-group
+                               (0+ (seq ?\[ (+? anything) ?\] (0+ space)
+                                        (opt ?\n (backref ,indent-group) (0+ space)))))
+                      (group-n ,signature-group
+                               (seq alpha (0+ nonl) (not (any ?\n ?\;)))
+                               (repeat 0 10 (seq ?\n
+                                                 (backref ,indent-group)
+                                                 (0+ space)
+                                                 (0+ nonl)))
+                               (opt ?\n ;; TODO cant this be simplified? Almost same as above
+                                    (backref ,indent-group)
                                     (0+ space))
-                           (seq alpha (0+ nonl) (not (any ?\n ?\;)))
-                           (repeat 0 10 (seq ?\n
-                                             (backref ,indent-group)
-                                             (0+ space)
-                                             (0+ nonl)))
-                           (opt (seq ?\n
-                                     (backref ,indent-group)
-                                     (0+ space)))
-                           (or (seq (group-n ,open-delimiter-group "{")
-                                    (0+ space) eol)
-                               (group-n ,open-delimiter-group "=>")))))))
-         (end-of-scope-group 5)
-         (succeeding-blank-lines-group 6)
+                               (or (seq (group-n ,open-delimiter-group "{")
+                                        (0+ space) eol)
+                                   (group-n ,open-delimiter-group "=>")))))))
+         (end-of-scope-group 7)
+         (succeeding-blank-lines-group 8)
          (build-end-of-scope-regexp
           (lambda (indent-string beg-of-scope-delimiter)
             "Build a regexp matching the end of the function."
