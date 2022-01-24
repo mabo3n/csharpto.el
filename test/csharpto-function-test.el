@@ -86,8 +86,8 @@ function `csharpto--test-buffer-fancy-substring'."
      (csharpto--test-buffer-fancy-substring regions 1))))
 
 (defvar csharpto--test-docstrings-alist
-  '((:header        . ((single-line  . "The function has a single-line header")
-                       (multi-line   . "The function has a multi-line header")))
+  '((:signature     . ((single-line  . "The function has a single-line signature")
+                       (multi-line   . "The function has a multi-line signature")))
     (:scope-type    . ((expression   . "The function is expression-bodied =>")
                        (brackets     . "The function body is defined with brackets { }")))
     (:scope-lf      . "There's a line feed before opening the function scope")
@@ -97,7 +97,7 @@ function `csharpto--test-buffer-fancy-substring'."
                        (multiple-inline      . "The function has multiple inline attributes")))
     (:cursor-line   . ((preceding-blank      . "The cursor lies in blank lines before the function")
                        (attributes   . "The cursor lies in attribute declarations before the function")
-                       (header       . "The cursor lies in the function header")
+                       (signature    . "The cursor lies in the function signature")
                        (beg-of-scope . "The cursor lies in the beginning of function scope")
                        (body         . "The cursor lies in the function body")
                        (end-of-scope . "The cursor lies in the end of function scope")
@@ -166,10 +166,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
                             :scope-lf      t
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'text)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(421 581)))
@@ -179,7 +179,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
                             :scope-lf      'break
                             :cursor-line   'body
@@ -234,10 +234,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'multi-line
+                            :signature     'multi-line
                             :scope-type    'expression
                             :scope-lf      t
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'preceding-blank)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(630 768)))
@@ -247,10 +247,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'multi-line
+                            :signature     'multi-line
                             :scope-type    'expression
                             :scope-lf      t
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'preceding-blank)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(630 769)))
@@ -260,7 +260,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
                             :cursor-line   'body
                             :cursor-column 'end-of-line)
@@ -272,7 +272,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
                             :cursor-line   'body
                             :cursor-column 'end-of-line)
@@ -294,7 +294,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'expression
                             :cursor-line   'body
                             :cursor-column 'end-of-line)
@@ -306,7 +306,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'expression
                             :cursor-line   'body
                             :cursor-column 'end-of-line)
@@ -318,9 +318,9 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'beg-of-line)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(127 290)))
@@ -330,9 +330,9 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'beg-of-line)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(128 290)))
@@ -342,10 +342,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'single-line
+                            :signature     'single-line
                             :scope-type    'brackets
                             :attributes    'single-inline
-                            :cursor-line   'header
+                            :cursor-line   'signature
                             :cursor-column 'end-of-line)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(660 983)))
@@ -355,7 +355,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'multi-line
+                            :signature     'multi-line
                             :scope-type    'expression
                             :scope-lf      t
                             :attributes    'multiple-preceding
@@ -369,7 +369,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
 
 (csharpto-test-run (csharpto--test-generate-scenario-description
                     :given (csharpto--test-generate-sentences
-                            :header        'multi-line
+                            :signature     'multi-line
                             :scope-type    'expression
                             :scope-lf      t
                             :attributes    'multiple-preceding
