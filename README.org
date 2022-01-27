@@ -1,0 +1,79 @@
+* csharpto.el
+  *csharp* *t*​ext *o*​bjects
+
+  This emacs extension aims to provide useful [[https://github.com/emacs-evil/evil][evil]] text objects for constructs of the C# language. Currently, only a "function" text object is supported.
+* TODO Usage
+* TODO Limitations
+  Performance hit with attributes/comments(?)
+  scopes within a function (if, try-catch, foreach, etc.)
+** TODO Disclaimer
+   Made with learning purposes.
+   Rudimentary test framework.
+
+* Why
+  It is useful (and efficient) to be able to operate over a function while editing programming files, as it is with words, sentences, paragraphs etc. while editing text. In C#, functions can be declared with the standard C-like syntax using curly brackets (={ }=) but also as an expression with (==>=), the so called [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/expression-bodied-members#methods][expression-bodied]] methods. Also, it is not unusual to find coding conventions where there's a line break before opening the scope. See some examples below:
+
+  #+begin_src csharp
+    class SomeClass {
+    
+        public Function1(string name)
+        {
+            Id = Guid.NewGuid();
+            logs = new List<LogEntry>() { };
+            Name = name;
+        }
+    
+        public int Function2(int a, int b) {
+            a++;
+    
+            b++;
+    
+            return a + b;
+    
+        }
+    
+        int Function3() => 1 + 2 + 3 + 4 + 5;
+    
+        void Function4(
+            DateTime timestamp, LogLevel? level = default
+        )
+            => throw new NotImplementedException();
+    
+    
+        public IEnumerable<char> Function5() =>
+            this.GetHashCode()
+                .ToString();
+    }
+  #+end_src
+
+  In this case, although you yourself understand and can refer to the 5 declared functions, it is not that straightforward to do that with your fingers within the editor.
+
+  In some cases you can get around this issue with existing text objects.
+
+  For example, usually there are no empty lines within expression-bodied function declarations, so you can refer to them with the standard paragraph text objects (~evil-a-paragraph~ if you want the accompaining blank lines and ~evil-inner-paragraph~ if you don't). But that won't work if the function is the first/last/only one in the class.
+
+  If you only have bracketed functions with both the signature and the ={= spanning a single line (like ~Function2~ in the previous example), you can refer to them with the ~evil-indent-plus-i-indent-up-down~ text object provided by [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]]. But for that to work the cursor must be inside the function [body], and also not under an empty line, otherwise the operand will be the surrounding class's.
+
+  If the function signature spans multiple lines, or there's a line break before opening the scope, or even if the function have [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to them, there's no easy way to refer to it even though you call it a "function" or "method".
+
+  Well, actually now there is. In the example below, to delete the whole function including the next empty line, instead of trying to hack your way with the visual mode (e.g. with =viJjokkd= or =V3ko8jd=), you can just press =daf= (or any other keybinding you chose) to delete an ~evil-a-csharpto-function~.
+
+  #+begin_src csharp
+    public class PersonTests
+    {
+        [Fact(Skip = "Fixed on b38a7b16")]
+        public void ChangeName_ShouldChangeName()
+        {
+            // Cursor is here:█
+            var oldName = "Mario";
+            var person = new Person(oldName, Guid.NewGuid());
+    
+            var newName = "Paul";
+            person.ChangeName(newName);
+    
+            person.Name.Should().Be(newName);
+        }
+    
+    }
+  #+end_src
+
