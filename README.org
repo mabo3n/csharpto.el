@@ -56,7 +56,7 @@
 
   If the function signature spans multiple lines, or there's a line break before opening the scope, or even if the function have [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to them, there's no easy way to refer to it even though you call it a "function" or "method".
 
-  Well, actually now there is. In the example below, to delete the whole function including the next empty line, instead of trying to hack your way with the visual mode (e.g. with =viJjokkd= or =V3ko8jd=), you can just press =daf= (or any other keybinding you chose) to delete an ~evil-a-csharpto-function~.
+  Well, actually now there is. In the example below, to delete the whole function including the next empty line, instead of trying to hack your way with the visual mode (e.g. =viJjokkd= with [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]] or =V3ko8jd= with relative line numbers), you can just press =daf= (or any other keybinding you chose) to delete an ~evil-a-csharpto-function~.
 
   #+begin_src csharp
     public class PersonTests
