@@ -3,4 +3,9 @@
 ** TODO Implement COUNT
 ** TODO Implement `body-only'
 ** TODO Support interfaces
-** TODO Support attributes
+** TODO Refactor test functions
+   Too much repeated code
+** TODO Define regex outside csharpto-get-function-region
+   To be compiled only once
+   [2022-01-25 Tue 21:37]
+   [[file:~/repos/csharpto/test/csharpto-function-test.el::let ((context-lines (or context-lines 0))]]
