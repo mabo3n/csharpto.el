@@ -34,7 +34,7 @@ It should work in most cases given:
              ;; is included in the match
              (seq (or buffer-start
                       ;; FIXME Don't match attribute + comments e.g.
-                      ;; [Attribute] // Comment not ending with ?\].
+                      ;; "[Attribute] // Comment not ending with ?\]."
                       ;; Below hangs while matching:
                       ;;
                       ;; (seq bol (0+ space)
@@ -44,12 +44,12 @@ It should work in most cases given:
                       ;; Workaround:
                       (not (any space ?\n ?\]))
                       )
-                  (0+ space) ?\n)
+                  (0+ space) (opt ?\n))
              (group-n ,preceding-blank-lines-group
                       (0+ (seq (0+ space) ?\n)))
              (group-n ,header-group
                       (group-n ,indent-group
-                               (0+ space))
+                               bol (0+ space))
                       (group-n ,attributes-group
                                (0+ (seq ?\[ (+? anything) ?\] (0+ space)
                                         (opt ?\n (backref ,indent-group) (0+ space)))))
