@@ -13,11 +13,11 @@ namespace Ativ4Mongo.backend.Infra.Repository
         public List<Blog> Get()
         {
              var blogs = Collection
-                .Find(_ => true)
-                .ToList()
-                .OrderByDescending(
-                    blog => blog.Posts?.LastOrDefault()?.PublishDate ?? DateTime.MinValue
-                );
+                 .Find(_ => true)
+                 .ToList()
+                 .OrderByDescending(
+                     blog => blog.Posts?.LastOrDefault()?.PublishDate ?? DateTime.MinValue
+                 );
 
              return blogs.ToList();
         }
@@ -37,7 +37,7 @@ namespace Ativ4Mongo.backend.Infra.Repository
 
         public void Add(Blog blog)
         {
-           Collection.InsertOne(blog);
+            Collection.InsertOne(blog);
         }
 
         public bool DeleteByOwner(string owner)
