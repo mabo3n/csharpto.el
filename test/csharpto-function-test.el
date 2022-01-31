@@ -385,6 +385,17 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           '(csharpto-get-function-region t)
           '(177 660))
 
+;; Regression
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given `("File starts with the class definition (no namespace)"
+                            ,@(csharpto--test-generate-sentences
+                               :cursor-line   'signature))
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(035 129)))
+                   '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
+                   '(csharpto-get-function-region nil)
+                   '(035 129))
+
 (provide 'csharpto-function-test)
 
 ;;; csharpto-function-test.el ends here
