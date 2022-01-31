@@ -34,20 +34,25 @@
 (defun csharpto--test-buffer-fancy-substring (regions &optional context-lines)
   "Return a substring of current buffer with REGIONS highlighted.
 
-REGIONS has form `((BEG END PLIST)...)` where PLIST is a property
+REGIONS has form `((BEG [END] PLIST)...)` where PLIST is a property
 list to be applied to the respective region in the substring.
+If END is not provided, `(1+ BEG)` is used. IF BEG is nil,
+the region is ignored.
 
 The returned substring includes N extra lines before and N extra
 after the matched regions, where N = CONTEXT-LINES. N Defaults to 0."
-  (let ((context-lines (or context-lines 0)))
+  (let ((regions (--filter (numberp (car it)) regions))
+        (context-lines (or context-lines 0)))
     (csharpto--test-with-replica-buffer (current-buffer)
       (dolist (region regions)
-        (let ((beg   (car region))
-              (end   (cadr region))
-              (plist (caddr region)))
+        (let* ((beg   (car region))
+               (end   (or (and (consp (cadr region)) (1+ beg))
+                          (cadr region)))
+               (plist (or (caddr region) (cadr region))))
           (add-text-properties beg end `(font-lock-face ,plist))))
       (let* ((positions   (append (mapcar 'car  regions)
                                   (mapcar 'cadr regions)))
+             (positions   (-filter #'numberp positions))
              (context-beg (progn
                             (goto-char (apply 'min positions))
                             (beginning-of-line (1+ (- context-lines)))
@@ -74,13 +79,12 @@ REGIONS has form `((BEG END)...)'."
 
 Format and forward POINT, REGION and EXPECTED-REGION to
 function `csharpto--test-buffer-fancy-substring'."
-  (let* ((overlap (csharpto--test-region-overlap region expected-region))
-         (regions (list `(,@expected-region  (:background "LightGoldenrod3"))
-                        `(,@region           (:background "IndianRed2"))
-                        (when overlap
-                          `(,@overlap        (:background "SeaGreen2")))
-                        `(,point ,(1+ point) (:background "gray"))))
-         (regions (-keep #'identity regions)))
+  (let* ((overlap (and region expected-region
+                       (csharpto--test-region-overlap region expected-region)))
+         (regions (list `(,@expected-region (:background "LightGoldenrod3"))
+                        `(,@region          (:background "IndianRed2"))
+                        `(,@overlap         (:background "SeaGreen2"))
+                        `(,point            (:background "gray")))))
     (csharpto--test-log-message
      "...\n%s\n..."
      (csharpto--test-buffer-fancy-substring regions 1))))
@@ -154,7 +158,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   (csharpto--test-log-message "\n%s\n\n" scenario)
   (with-temp-buffer
     (eval arrange-function)
-    (let* ((returned-region (eval fcall))
+    (let* ((returned-region (ignore-errors (eval fcall)))
            (regions-match-p (equal returned-region expected-region)))
       (if regions-match-p
           (csharpto--test-log-message "Pass\n")
