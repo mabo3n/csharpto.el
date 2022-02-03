@@ -114,7 +114,10 @@ function `csharpto--test-buffer-fancy-substring'."
                        (preceding-blank  . "The cursor lies in the indentation")
                        (text             . "The cursor lies in the text")
                        (succeeding-blank . "The cursor lies in the blank spaces ending the line")
-                       (end-of-line      . "The cursor lies in the end of line"))))
+                       (end-of-line      . "The cursor lies in the end of line")))
+    (:item-above    . ((none . "There's nothing above the cursor inside the function")
+                       (lambda-exp . "There's a lambda expression above the cursor inside the function")))
+    (:item-below    . ((none . "There's nothing below the cursor inside the function"))))
   "Mapping between test prop values and their textual description.")
 
 (defun csharpto--test-generate-sentences (&rest plist)
@@ -398,6 +401,108 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                    '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
                    '(csharpto-get-function-region nil)
                    '(035 129))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'brackets
+                            :scope-lf      t
+                            :cursor-line   'body
+                            :cursor-column 'beg-of-line
+                            :item-above    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(282 616)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+                   '(csharpto-get-function-region nil)
+                   '(282 616))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'brackets
+                            :scope-lf      t
+                            :cursor-line   'body
+                            :cursor-column 'beg-of-line
+                            :item-above    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region t))
+                    :then (format "%s should be returned" '(282 617)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+                   '(csharpto-get-function-region t)
+                   '(282 617))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'brackets
+                            :scope-lf      t
+                            :cursor-line   'body
+                            :cursor-column 'beg-of-line
+                            :item-above    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region t))
+                    :then (format "%s should be returned" '(282 617)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+                   '(csharpto-get-function-region t)
+                   '(282 617))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'expression
+                            :scope-lf      t
+                            :cursor-line   'body
+                            :cursor-column 'preceding-blank
+                            :item-above    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(617 795)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
+                   '(csharpto-get-function-region nil)
+                   '(617 795))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'expression
+                            :scope-lf      t
+                            :cursor-line   'body
+                            :cursor-column 'preceding-blank
+                            :item-above    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region t))
+                    :then (format "%s should be returned" '(617 796)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
+                   '(csharpto-get-function-region t)
+                   '(617 796))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'brackets
+                            :scope-lf      t
+                            :attributes    'single-preceding
+                            :cursor-line   'body
+                            :cursor-column 'end-of-line
+                            :item-above    'lambda-exp
+                            :item-below    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region nil))
+                    :then (format "%s should be returned" '(1226 1517)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
+                   '(csharpto-get-function-region nil)
+                   '(1226 1517))
+
+(csharpto-test-run (csharpto--test-generate-scenario-description
+                    :given (csharpto--test-generate-sentences
+                            :signature     'single-line
+                            :scope-type    'brackets
+                            :scope-lf      t
+                            :attributes    'single-preceding
+                            :cursor-line   'body
+                            :cursor-column 'end-of-line
+                            :item-above    'lambda-exp
+                            :item-below    'lambda-exp)
+                    :when (format "I call %s" '(csharpto-get-function-region t))
+                    :then (format "%s should be returned" '(1225 1517)))
+                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
+                   '(csharpto-get-function-region t)
+                   '(1225 1517))
 
 (provide 'csharpto-function-test)
 
