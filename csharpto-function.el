@@ -53,12 +53,26 @@ It should work in most cases given:
                                (0+ (seq ?\[ (+? anything) ?\] (0+ space)
                                         (opt ?\n (backref ,indent-group) (0+ space)))))
                       (group-n ,signature-group
-                               (seq alpha (0+ nonl) (not (any ?\n ?\;)))
-                               (repeat 0 10 (seq ?\n
-                                                 (backref ,indent-group)
-                                                 (0+ space)
-                                                 (0+ nonl)))
-                               (opt ?\n ;; TODO cant this be simplified? Almost same as above
+                               ;; Type or access modifier followed by a space:
+                               (seq alpha
+                                    (opt (0+ (not (any ?\n ?=)))
+                                         (not (any ?\n ?\) ?= ?, space)))
+                                    space)
+                               ;; Anything with at least one "(" on 1st line
+                               ;; (this with above prevents matching lambda
+                               ;;  expressions but also classes/namespaces):
+                               (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl))
+                               ;; Optional multi-line signature:
+                               (minimal-match
+                                (repeat 0 10 (seq ?\n
+                                                  (backref ,indent-group)
+                                                  (0+ space)
+                                                  (0+ nonl))))
+                               ;; ?\) (0+ space) ;; This would be nice but makes it too slow
+                               ;; Optional line feed before scope opening:
+                               ;; FIXME Can't this be simplified?
+                               ;;       Almost same as repeat form above
+                               (opt ?\n
                                     (backref ,indent-group)
                                     (0+ space))
                                (or (seq (group-n ,open-delimiter-group "{")
@@ -88,15 +102,14 @@ It should work in most cases given:
                      (match-data)))
                (next-fun-match-data
                 (and (goto-char
-                      (or (and (match-end 0) (1- (match-end header-group)))
-                          ;; go to beg of empty lines to include
-                          ;; all of them in the match
+                      (or (and prev-fun-match-data (1- (match-end header-group)))
+                          ;; try to go to beginning of empty lines
+                          ;; to include all of them in the match
                           (and (re-search-backward (rx bol (0+ space) ?\n) nil t)
                                (re-search-backward (rx (or buffer-start (not space))
                                                        (0+ space)
-                                                       ?\n) nil t)
-                               (1+ (match-end 0)))
-                          (point-at-bol)))
+                                                       ?\n) nil t))
+                          (point-min)))
                      (re-search-forward header-regexp nil t)
                      (match-data))))
           (cond
