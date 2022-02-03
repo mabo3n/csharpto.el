@@ -22,13 +22,11 @@ namespace Ativ4Mongo.backend.Infra.Repository
              return blogs.ToList();
         }
 
-        public Blog GetByOwner(string owner)
-        {
-            return Collection
+        Blog GetByOwner(string owner)
+            => Collection
                 .Find(p => p.Owner == owner)
-                .ToList()
-                .FirstOrDefault();
-        }
+                    .ToList()
+                    .FirstOrDefault();
 
         public bool ExistsByOwner(string owner)
         {
