@@ -42,8 +42,7 @@ It should work in most cases given:
                       ;;      (0+ nonl) (not (any space ?\n ?\])) eol)
                       ;;
                       ;; Workaround:
-                      (not (any space ?\n ?\]))
-                      )
+                      (not (any space ?\n ?\])))
                   (0+ space) (opt ?\n))
              (group-n ,preceding-blank-lines-group
                       (0+ (seq (0+ space) ?\n)))
