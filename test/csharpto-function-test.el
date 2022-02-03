@@ -5,6 +5,9 @@
 ;;; Code:
 
 (require 'csharpto-function)
+(require 'csharp-mode)
+(require 'dash)
+(require 'subr-x)
 
 (defun csharpto--test-log-message (format-string &rest args)
   "Log FORMAT-STRING with ARGS into the test run buffer."
