@@ -115,9 +115,10 @@ function `csharpto--test-buffer-fancy-substring'."
                        (text             . "The cursor lies in the text")
                        (succeeding-blank . "The cursor lies in the blank spaces ending the line")
                        (end-of-line      . "The cursor lies in the end of line")))
-    (:item-above    . ((none . "There's nothing above the cursor inside the function")
-                       (lambda-exp . "There's a lambda expression above the cursor inside the function")))
-    (:item-below    . ((none . "There's nothing below the cursor inside the function"))))
+    (:item-before   . ((none       . "There's nothing before the cursor inside the function")
+                       (lambda-exp . "There's a lambda expression before the cursor inside the function")))
+    (:item-after    . ((none       . "There's nothing after the cursor inside the function")
+                       (lambda-exp . "There's a lambda expression after the cursor inside the function"))))
   "Mapping between test prop values and their textual description.")
 
 (defun csharpto--test-generate-sentences (&rest plist)
@@ -409,7 +410,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :scope-lf      t
                             :cursor-line   'body
                             :cursor-column 'beg-of-line
-                            :item-above    'lambda-exp)
+                            :item-before  'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(282 616)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
@@ -423,7 +424,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :scope-lf      t
                             :cursor-line   'body
                             :cursor-column 'beg-of-line
-                            :item-above    'lambda-exp)
+                            :item-before   'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(282 617)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
@@ -437,7 +438,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :scope-lf      t
                             :cursor-line   'body
                             :cursor-column 'beg-of-line
-                            :item-above    'lambda-exp)
+                            :item-before   'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(282 617)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
@@ -451,7 +452,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :scope-lf      t
                             :cursor-line   'body
                             :cursor-column 'preceding-blank
-                            :item-above    'lambda-exp)
+                            :item-before   'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(617 795)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
@@ -465,7 +466,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :scope-lf      t
                             :cursor-line   'body
                             :cursor-column 'preceding-blank
-                            :item-above    'lambda-exp)
+                            :item-before   'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(617 796)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
@@ -480,8 +481,8 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :attributes    'single-preceding
                             :cursor-line   'body
                             :cursor-column 'end-of-line
-                            :item-above    'lambda-exp
-                            :item-below    'lambda-exp)
+                            :item-before   'lambda-exp
+                            :item-after    'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region nil))
                     :then (format "%s should be returned" '(1226 1517)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
@@ -496,8 +497,8 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
                             :attributes    'single-preceding
                             :cursor-line   'body
                             :cursor-column 'end-of-line
-                            :item-above    'lambda-exp
-                            :item-below    'lambda-exp)
+                            :item-before   'lambda-exp
+                            :item-after    'lambda-exp)
                     :when (format "I call %s" '(csharpto-get-function-region t))
                     :then (format "%s should be returned" '(1225 1517)))
                    '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
