@@ -44,6 +44,7 @@ namespace Ativ4Mongo.backend.Infra.Repository
             return result.IsAcknowledged && result.DeletedCount > 0;
         }
 
+        [SomeRandomAttribute("Yes")]
         public void AddPostToBlogByOwner(string owner, Post post)
         {
             Collection.UpdateOne(
