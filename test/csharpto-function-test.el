@@ -121,7 +121,7 @@ function `csharpto--test-buffer-fancy-substring'."
   "Return a list of corresponding sentences for each prop in PLIST.
 
 See variable `csharpto--test-docstrings-alist'."
-  (when-let* ((_     plist)
+  (when-let* ((plist plist)
               (key   (car plist))
               (value (cadr plist))
               (options  (alist-get key csharpto--test-docstrings-alist))
