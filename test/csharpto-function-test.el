@@ -34,27 +34,27 @@
        (insert-buffer-substring buf)
        (progn ,@body))))
 
-(defun csharpto--test-buffer-fancy-substring (regions &optional context-lines)
-  "Return a substring of current buffer with REGIONS highlighted.
+(defun csharpto--test-buffer-fancy-substring (ranges &optional context-lines)
+  "Return a substring of current buffer with RANGES highlighted.
 
-REGIONS has form `((BEG [END] PLIST)...)` where PLIST is a property
-list to be applied to the respective region in the substring.
+RANGES has form `((BEG [END] PLIST)...)` where PLIST is a property
+list to be applied to the respective range in the substring.
 If END is not provided, `(1+ BEG)` is used. IF BEG is nil,
-the region is ignored.
+the range is ignored.
 
 The returned substring includes N extra lines before and N extra
-after the matched regions, where N = CONTEXT-LINES. N Defaults to 0."
-  (let ((regions (--filter (numberp (car it)) regions))
+after the matched ranges, where N = CONTEXT-LINES. N Defaults to 0."
+  (let ((ranges (--filter (numberp (car it)) ranges))
         (context-lines (or context-lines 0)))
     (csharpto--test-with-replica-buffer (current-buffer)
-      (dolist (region regions)
-        (let* ((beg   (car region))
-               (end   (or (and (consp (cadr region)) (1+ beg))
-                          (cadr region)))
-               (plist (or (caddr region) (cadr region))))
+      (dolist (range ranges)
+        (let* ((beg   (car range))
+               (end   (or (and (consp (cadr range)) (1+ beg))
+                          (cadr range)))
+               (plist (or (caddr range) (cadr range))))
           (add-text-properties beg end `(font-lock-face ,plist))))
-      (let* ((positions   (append (mapcar 'car  regions)
-                                  (mapcar 'cadr regions)))
+      (let* ((positions   (append (mapcar 'car  ranges)
+                                  (mapcar 'cadr ranges)))
              (positions   (-filter #'numberp positions))
              (context-beg (progn
                             (goto-char (apply 'min positions))
@@ -66,31 +66,31 @@ after the matched regions, where N = CONTEXT-LINES. N Defaults to 0."
                             (point))))
         (buffer-substring context-beg context-end)))))
 
-(defun csharpto--test-region-overlap (&rest regions)
-  "Return a region that overlaps all REGIONS.
+(defun csharpto--test-range-overlap (&rest ranges)
+  "Return a range that overlaps all RANGES.
 
-REGIONS has form `((BEG END)...)'."
-  (-let* (((begs . rest)     (apply '-zip-lists regions))
+RANGES has form `((BEG END)...)'."
+  (-let* (((begs . rest)     (apply '-zip-lists ranges))
           (ends              (car (last rest)))
           (highest-beginning (apply 'max begs))
           (lowest-end        (apply 'min ends)))
     (and (< highest-beginning lowest-end)
          (list highest-beginning lowest-end))))
 
-(defun csharpto--test-log-code-snippet (point region expected-region)
+(defun csharpto--test-log-code-snippet (point range expected-range)
   "Output a properly formatted code-snippet.
 
-Format and forward POINT, REGION and EXPECTED-REGION to
+Format and forward POINT, RANGE and EXPECTED-RANGE to
 function `csharpto--test-buffer-fancy-substring'."
-  (let* ((overlap (and region expected-region
-                       (csharpto--test-region-overlap region expected-region)))
-         (regions (list `(,@expected-region (:background "LightGoldenrod3"))
-                        `(,@region          (:background "IndianRed2"))
-                        `(,@overlap         (:background "SeaGreen2"))
-                        `(,point            (:background "gray")))))
+  (let* ((overlap (and range expected-range
+                       (csharpto--test-range-overlap range expected-range)))
+         (ranges (list `(,@expected-range  (:background "LightGoldenrod3"))
+                       `(,@range           (:background "IndianRed2"))
+                       `(,@overlap         (:background "SeaGreen2"))
+                       `(,point            (:background "gray")))))
     (csharpto--test-log-message
      "...\n%s\n..."
-     (csharpto--test-buffer-fancy-substring regions 1))))
+     (csharpto--test-buffer-fancy-substring ranges 1))))
 
 (defvar csharpto--test-docstrings-alist
   '((:signature        . ((single-line  . "The function has a single-line signature")
@@ -166,19 +166,19 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   (when goto-beg-of-match
     (goto-char (match-beginning 0))))
 
-(defun csharpto-test-run (scenario arrange-function fcall expected-region)
+(defun csharpto-test-run (scenario arrange-function fcall expected-range)
   "Run a test according to arguments."
   (csharpto--test-log-message "\n%s\n\n" scenario)
   (with-temp-buffer
     (eval arrange-function)
-    (let* ((returned-region (ignore-errors (eval fcall)))
-           (regions-match-p (equal returned-region expected-region)))
-      (if regions-match-p
+    (let* ((returned-range (ignore-errors (eval fcall)))
+           (ranges-match-p (equal returned-range expected-range)))
+      (if ranges-match-p
           (csharpto--test-log-message "Pass\n")
-        (csharpto--test-log-message "Fail: region mismatch\n\n")
-        (csharpto--test-log-message "%s ⇒ %s\n\n" fcall returned-region)
-        (csharpto--test-log-message "Expected: %s\n" expected-region)
-        (csharpto--test-log-code-snippet (point) returned-region expected-region))))
+        (csharpto--test-log-message "Fail: range mismatch\n\n")
+        (csharpto--test-log-message "%s ⇒ %s\n\n" fcall returned-range)
+        (csharpto--test-log-message "Expected: %s\n" expected-range)
+        (csharpto--test-log-code-snippet (point) returned-range expected-range))))
   (csharpto--test-log-message "\n%s" (make-string 30 ?-)))
 
 (csharpto-test-run
@@ -189,10 +189,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-lf      t
           :cursor-line   'signature
           :cursor-column 'text)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(421 581)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "public MyEntity(string name)" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(421 581))
 
 (csharpto-test-run
@@ -203,10 +203,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-lf      'break
           :cursor-line   'body
           :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(421 582)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "  logs = new List<LogEntry>" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(421 582))
 
 (csharpto-test-run
@@ -214,10 +214,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   :given (csharpto--test-generate-sentences
           :cursor-line   'blank
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(581 582)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(581 582))
 
 (csharpto-test-run
@@ -225,10 +225,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   :given (csharpto--test-generate-sentences
           :cursor-line   'blank
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(581 628)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(581 628))
 
 (csharpto-test-run
@@ -237,10 +237,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'expression
           :cursor-line   'body
           :cursor-column 'succeeding-blank)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(582 628)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(582 628))
 
 (csharpto-test-run
@@ -249,10 +249,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'expression
           :cursor-line   'body
           :cursor-column 'succeeding-blank)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(582 630)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(582 630))
 
 (csharpto-test-run
@@ -263,10 +263,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-lf      t
           :cursor-line   'signature
           :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(630 768)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(630 768))
 
 (csharpto-test-run
@@ -277,10 +277,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-lf      t
           :cursor-line   'signature
           :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(630 769)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(630 769))
 
 (csharpto-test-run
@@ -290,10 +290,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'brackets
           :cursor-line   'body
           :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(769 888)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(769 888))
 
 (csharpto-test-run
@@ -303,10 +303,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'brackets
           :cursor-line   'body
           :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(769 891)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(769 891))
 
 (csharpto-test-run
@@ -314,10 +314,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   :given (csharpto--test-generate-sentences
           :cursor-line   'blank
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(888 1010)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "\n\n\\s +public IEnumerable" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(888 1010))
 
 (csharpto-test-run
@@ -327,10 +327,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'expression
           :cursor-line   'body
           :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(891 1010)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(891 1010))
 
 (csharpto-test-run
@@ -340,10 +340,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'expression
           :cursor-line   'body
           :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(888 1010)))
  '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(888 1010))
 
 (csharpto-test-run
@@ -353,10 +353,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'brackets
           :cursor-line   'signature
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(127 290)))
  '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(127 290))
 
 (csharpto-test-run
@@ -366,10 +366,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :scope-type    'brackets
           :cursor-line   'signature
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(128 290)))
  '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(128 290))
 
 (csharpto-test-run
@@ -380,10 +380,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :attributes    'single-inline
           :cursor-line   'signature
           :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(660 983)))
  '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "ChangeName() {" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(660 983))
 
 (csharpto-test-run
@@ -395,10 +395,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :attributes    'multiple-preceding
           :cursor-line   'attributes
           :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(177 659)))
  '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "^.+\\[Theory\\]" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(177 659))
 
 (csharpto-test-run
@@ -410,10 +410,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :attributes    'multiple-preceding
           :cursor-line   'body
           :cursor-column 'text)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(177 660)))
  '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "() => new" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(177 660))
 
 ;; Regression
@@ -422,10 +422,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   :given `("File starts with the class definition (no namespace)"
            ,@(csharpto--test-generate-sentences
               :cursor-line   'signature))
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(035 129)))
  '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(035 129))
 
 (csharpto-test-run
@@ -437,10 +437,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'beg-of-line
           :item-before  'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(282 616)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(282 616))
 
 (csharpto-test-run
@@ -452,10 +452,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'beg-of-line
           :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(282 617)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(282 617))
 
 (csharpto-test-run
@@ -467,10 +467,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'beg-of-line
           :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(282 617)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(282 617))
 
 (csharpto-test-run
@@ -482,10 +482,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'preceding-blank
           :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(617 795)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(617 795))
 
 (csharpto-test-run
@@ -497,10 +497,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'preceding-blank
           :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(617 796)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(617 796))
 
 (csharpto-test-run
@@ -514,10 +514,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'end-of-line
           :item-before   'lambda-exp
           :item-after    'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(1226 1517)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(1226 1517))
 
 (csharpto-test-run
@@ -531,10 +531,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'end-of-line
           :item-before   'lambda-exp
           :item-after    'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(1225 1517)))
  '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(1225 1517))
 
 (csharpto-test-run
@@ -545,10 +545,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'text
           :generic-type  'single)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(63 98)))
  '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(63 98))
 
 (csharpto-test-run
@@ -559,10 +559,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-line   'body
           :cursor-column 'text
           :generic-type  'single)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(63 97)))
  '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(63 97))
 
 (csharpto-test-run
@@ -574,10 +574,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :generic-type  'multiple
           :type-constraint 'single)
-  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :when (format "I call %s" '(csharpto-get-function-range nil))
   :then (format "%s should be returned" '(98 197)))
  '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
- '(csharpto-get-function-region nil)
+ '(csharpto-get-function-range nil)
  '(98 197))
 
 (csharpto-test-run
@@ -589,10 +589,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :generic-type  'multiple
           :type-constraint 'single)
-  :when (format "I call %s" '(csharpto-get-function-region t))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(97 197)))
  '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
- '(csharpto-get-function-region t)
+ '(csharpto-get-function-range t)
  '(97 197))
 
 (provide 'csharpto-function-test)

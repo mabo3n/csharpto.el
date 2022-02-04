@@ -2,7 +2,7 @@
 
 ;;; Code:
 
-(defun csharpto-get-function-region
+(defun csharpto-get-function-range
     (&optional include-around)
   "Return (BEG END) of function under point.
 
@@ -94,7 +94,7 @@ It should work in most cases given:
                               ,@end-of-scope (0+ space) ?\n)
                      (group-n ,succeeding-blank-lines-group
                               (0+ (0+ space) ?\n))))))))
-    (catch 'region
+    (catch 'range
       (save-excursion
         (let* ((p (point))
                (prev-fun-match-data
@@ -120,12 +120,12 @@ It should work in most cases given:
                  (>= p (match-beginning preceding-blank-lines-group)))
             (if include-around
                 (set-match-data next-fun-match-data)
-              (throw 'region `(,(match-beginning preceding-blank-lines-group)
-                               ,(match-end       preceding-blank-lines-group)))))
+              (throw 'range `(,(match-beginning preceding-blank-lines-group)
+                              ,(match-end       preceding-blank-lines-group)))))
            (prev-fun-match-data
             (set-match-data prev-fun-match-data))
            (t
-            (throw 'region '())))
+            (throw 'range '())))
 
           (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
                       (header-line-beg   (match-beginning header-group))
@@ -143,10 +143,10 @@ It should work in most cases given:
                       (succeeding-blank-lines-end (match-end succeeding-blank-lines-group)))
 
             (if (>= p succeeding-blank-lines-beg)
-                (throw 'region `(,succeeding-blank-lines-beg
-                                 ,succeeding-blank-lines-end))
+                (throw 'range `(,succeeding-blank-lines-beg
+                                ,succeeding-blank-lines-end))
               (if (>= p header-line-beg)
-                  (throw 'region
+                  (throw 'range
                          `(,(if (and include-around
                                      (not (> (length (match-string
                                                       succeeding-blank-lines-group))
@@ -156,7 +156,7 @@ It should work in most cases given:
                            ,(if include-around
                                 (match-end 0)
                               (match-end end-of-scope-group))))
-                (throw 'region
+                (throw 'range
                        `(,preceding-blank-lines-beg
                          ,(match-end end-of-scope-group)))))))))))
 

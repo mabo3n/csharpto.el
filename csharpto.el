@@ -35,10 +35,10 @@
 (require 'evil)
 
 (evil-define-text-object evil-inner-csharpto-function (count &optional beg end type)
-  (csharpto-get-function-region nil))
+  (csharpto-get-function-range nil))
 
 (evil-define-text-object evil-a-csharpto-function (count &optional beg end type)
-  (csharpto-get-function-region t))
+  (csharpto-get-function-range t))
 
 (provide 'csharpto)
 
