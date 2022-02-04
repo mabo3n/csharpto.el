@@ -56,7 +56,7 @@ It should work in most cases given:
                                ;; Type or access modifier followed by a space:
                                (seq alpha
                                     (opt (0+ (not (any ?\n ?=)))
-                                         (not (any ?\n ?\) ?= ?, space)))
+                                         (not (any ?\n ?\) ?= ?: ?, space)))
                                     space)
                                ;; Anything with at least one "(" on 1st line
                                ;; (this with above prevents matching lambda
