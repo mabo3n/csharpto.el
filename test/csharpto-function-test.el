@@ -181,389 +181,419 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
         (csharpto--test-log-code-snippet (point) returned-region expected-region))))
   (csharpto--test-log-message "\n%s" (make-string 30 ?-)))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :cursor-line   'signature
-                            :cursor-column 'text)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(421 581)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "public MyEntity(string name)" t)
-          '(csharpto-get-function-region nil)
-          '(421 581))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'signature
+          :cursor-column 'text)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(421 581)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "public MyEntity(string name)" t)
+ '(csharpto-get-function-region nil)
+ '(421 581))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      'break
-                            :cursor-line   'body
-                            :cursor-column 'preceding-blank)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(421 582)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "  logs = new List<LogEntry>" t)
-          '(csharpto-get-function-region t)
-          '(421 582))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      'break
+          :cursor-line   'body
+          :cursor-column 'preceding-blank)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(421 582)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "  logs = new List<LogEntry>" t)
+ '(csharpto-get-function-region t)
+ '(421 582))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :cursor-line   'blank
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(581 582)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
-          '(csharpto-get-function-region nil)
-          '(581 582))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :cursor-line   'blank
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(581 582)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
+ '(csharpto-get-function-region nil)
+ '(581 582))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :cursor-line   'blank
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(581 628)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
-          '(csharpto-get-function-region t)
-          '(581 628))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :cursor-line   'blank
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(581 628)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
+ '(csharpto-get-function-region t)
+ '(581 628))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'succeeding-blank)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(582 628)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
-          '(csharpto-get-function-region nil)
-          '(582 628))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'succeeding-blank)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(582 628)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
+ '(csharpto-get-function-region nil)
+ '(582 628))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'succeeding-blank)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(582 630)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
-          '(csharpto-get-function-region t)
-          '(582 630))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'succeeding-blank)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(582 630)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
+ '(csharpto-get-function-region t)
+ '(582 630))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :cursor-line   'signature
-                            :cursor-column 'preceding-blank)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(630 768)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
-          '(csharpto-get-function-region nil)
-          '(630 768))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :scope-lf      t
+          :cursor-line   'signature
+          :cursor-column 'preceding-blank)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(630 768)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
+ '(csharpto-get-function-region nil)
+ '(630 768))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :cursor-line   'signature
-                            :cursor-column 'preceding-blank)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(630 769)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
-          '(csharpto-get-function-region t)
-          '(630 769))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :scope-lf      t
+          :cursor-line   'signature
+          :cursor-column 'preceding-blank)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(630 769)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
+ '(csharpto-get-function-region t)
+ '(630 769))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(769 888)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
-          '(csharpto-get-function-region nil)
-          '(769 888))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'body
+          :cursor-column 'end-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(769 888)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
+ '(csharpto-get-function-region nil)
+ '(769 888))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(769 891)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
-          '(csharpto-get-function-region t)
-          '(769 891))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'body
+          :cursor-column 'end-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(769 891)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
+ '(csharpto-get-function-region t)
+ '(769 891))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :cursor-line   'blank
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(888 1010)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "\n\n\\s +public IEnumerable" t)
-          '(csharpto-get-function-region t)
-          '(888 1010))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :cursor-line   'blank
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(888 1010)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "\n\n\\s +public IEnumerable" t)
+ '(csharpto-get-function-region t)
+ '(888 1010))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(891 1010)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
-          '(csharpto-get-function-region nil)
-          '(891 1010))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'end-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(891 1010)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
+ '(csharpto-get-function-region nil)
+ '(891 1010))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(888 1010)))
-          '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
-          '(csharpto-get-function-region t)
-          '(888 1010))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'end-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(888 1010)))
+ '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
+ '(csharpto-get-function-region t)
+ '(888 1010))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :cursor-line   'signature
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(127 290)))
-          '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
-          '(csharpto-get-function-region t)
-          '(127 290))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'signature
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(127 290)))
+ '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
+ '(csharpto-get-function-region t)
+ '(127 290))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :cursor-line   'signature
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(128 290)))
-          '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
-          '(csharpto-get-function-region nil)
-          '(128 290))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'signature
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(128 290)))
+ '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
+ '(csharpto-get-function-region nil)
+ '(128 290))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :attributes    'single-inline
-                            :cursor-line   'signature
-                            :cursor-column 'end-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(660 983)))
-          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "ChangeName() {" nil)
-          '(csharpto-get-function-region nil)
-          '(660 983))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :attributes    'single-inline
+          :cursor-line   'signature
+          :cursor-column 'end-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(660 983)))
+ '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "ChangeName() {" nil)
+ '(csharpto-get-function-region nil)
+ '(660 983))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :attributes    'multiple-preceding
-                            :cursor-line   'attributes
-                            :cursor-column 'beg-of-line)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(177 659)))
-          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "^.+\\[Theory\\]" t)
-          '(csharpto-get-function-region nil)
-          '(177 659))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :scope-lf      t
+          :attributes    'multiple-preceding
+          :cursor-line   'attributes
+          :cursor-column 'beg-of-line)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(177 659)))
+ '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "^.+\\[Theory\\]" t)
+ '(csharpto-get-function-region nil)
+ '(177 659))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :attributes    'multiple-preceding
-                            :cursor-line   'body
-                            :cursor-column 'text)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(177 660)))
-          '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "() => new" nil)
-          '(csharpto-get-function-region t)
-          '(177 660))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :scope-lf      t
+          :attributes    'multiple-preceding
+          :cursor-line   'body
+          :cursor-column 'text)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(177 660)))
+ '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "() => new" nil)
+ '(csharpto-get-function-region t)
+ '(177 660))
 
 ;; Regression
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given `("File starts with the class definition (no namespace)"
-                            ,@(csharpto--test-generate-sentences
-                               :cursor-line   'signature))
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(035 129)))
-                   '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
-                   '(csharpto-get-function-region nil)
-                   '(035 129))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given `("File starts with the class definition (no namespace)"
+           ,@(csharpto--test-generate-sentences
+              :cursor-line   'signature))
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(035 129)))
+ '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
+ '(csharpto-get-function-region nil)
+ '(035 129))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :cursor-line   'body
-                            :cursor-column 'beg-of-line
-                            :item-before  'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(282 616)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
-                   '(csharpto-get-function-region nil)
-                   '(282 616))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :item-before  'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(282 616)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+ '(csharpto-get-function-region nil)
+ '(282 616))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :cursor-line   'body
-                            :cursor-column 'beg-of-line
-                            :item-before   'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(282 617)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
-                   '(csharpto-get-function-region t)
-                   '(282 617))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :item-before   'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(282 617)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+ '(csharpto-get-function-region t)
+ '(282 617))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :cursor-line   'body
-                            :cursor-column 'beg-of-line
-                            :item-before   'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(282 617)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
-                   '(csharpto-get-function-region t)
-                   '(282 617))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :item-before   'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(282 617)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
+ '(csharpto-get-function-region t)
+ '(282 617))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :cursor-line   'body
-                            :cursor-column 'preceding-blank
-                            :item-before   'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(617 795)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
-                   '(csharpto-get-function-region nil)
-                   '(617 795))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'preceding-blank
+          :item-before   'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(617 795)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
+ '(csharpto-get-function-region nil)
+ '(617 795))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :scope-lf      t
-                            :cursor-line   'body
-                            :cursor-column 'preceding-blank
-                            :item-before   'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(617 796)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
-                   '(csharpto-get-function-region t)
-                   '(617 796))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'preceding-blank
+          :item-before   'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(617 796)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
+ '(csharpto-get-function-region t)
+ '(617 796))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :attributes    'single-preceding
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line
-                            :item-before   'lambda-exp
-                            :item-after    'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(1226 1517)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
-                   '(csharpto-get-function-region nil)
-                   '(1226 1517))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :attributes    'single-preceding
+          :cursor-line   'body
+          :cursor-column 'end-of-line
+          :item-before   'lambda-exp
+          :item-after    'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(1226 1517)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
+ '(csharpto-get-function-region nil)
+ '(1226 1517))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'brackets
-                            :scope-lf      t
-                            :attributes    'single-preceding
-                            :cursor-line   'body
-                            :cursor-column 'end-of-line
-                            :item-before   'lambda-exp
-                            :item-after    'lambda-exp)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(1225 1517)))
-                   '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
-                   '(csharpto-get-function-region t)
-                   '(1225 1517))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :attributes    'single-preceding
+          :cursor-line   'body
+          :cursor-column 'end-of-line
+          :item-before   'lambda-exp
+          :item-after    'lambda-exp)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(1225 1517)))
+ '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
+ '(csharpto-get-function-region t)
+ '(1225 1517))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'text
-                            :generic-type  'single)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(63 98)))
-                   '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
-                   '(csharpto-get-function-region t)
-                   '(63 98))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'text
+          :generic-type  'single)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(63 98)))
+ '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
+ '(csharpto-get-function-region t)
+ '(63 98))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'single-line
-                            :scope-type    'expression
-                            :cursor-line   'body
-                            :cursor-column 'text
-                            :generic-type  'single)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(63 97)))
-                   '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
-                   '(csharpto-get-function-region nil)
-                   '(63 97))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'text
+          :generic-type  'single)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(63 97)))
+ '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
+ '(csharpto-get-function-region nil)
+ '(63 97))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'brackets
-                            :cursor-line   'signature
-                            :cursor-column 'text
-                            :generic-type  'multiple
-                            :type-constraint 'single)
-                    :when (format "I call %s" '(csharpto-get-function-region nil))
-                    :then (format "%s should be returned" '(98 197)))
-                   '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
-                   '(csharpto-get-function-region nil)
-                   '(98 197))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'signature
+          :cursor-column 'text
+          :generic-type  'multiple
+          :type-constraint 'single)
+  :when (format "I call %s" '(csharpto-get-function-region nil))
+  :then (format "%s should be returned" '(98 197)))
+ '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
+ '(csharpto-get-function-region nil)
+ '(98 197))
 
-(csharpto-test-run (csharpto--test-generate-scenario-description
-                    :given (csharpto--test-generate-sentences
-                            :signature     'multi-line
-                            :scope-type    'brackets
-                            :cursor-line   'signature
-                            :cursor-column 'text
-                            :generic-type  'multiple
-                            :type-constraint 'single)
-                    :when (format "I call %s" '(csharpto-get-function-region t))
-                    :then (format "%s should be returned" '(97 197)))
-                   '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
-                   '(csharpto-get-function-region t)
-                   '(97 197))
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'signature
+          :cursor-column 'text
+          :generic-type  'multiple
+          :type-constraint 'single)
+  :when (format "I call %s" '(csharpto-get-function-region t))
+  :then (format "%s should be returned" '(97 197)))
+ '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
+ '(csharpto-get-function-region t)
+ '(97 197))
 
 (provide 'csharpto-function-test)
 
