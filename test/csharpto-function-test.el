@@ -622,10 +622,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :comment-line  'above)
   :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(426 716)))
+  :then (format "%s should be returned" '(421 716)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
  '(csharpto-get-function-range nil)
- '(426 716))
+ '(421 716))
 
 (csharpto-test-run
  (csharpto--test-generate-scenario-description
@@ -637,10 +637,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :comment-line  'above)
   :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(426 717)))
+  :then (format "%s should be returned" '(421 717)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
  '(csharpto-get-function-range t)
- '(426 717))
+ '(421 717))
 
 (csharpto-test-run
  (csharpto--test-generate-scenario-description
@@ -665,10 +665,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :comment-line  'end-of-scope)
   :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(717 806)))
+  :then (format "%s should be returned" '(717 807)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "OneLiner" nil)
  '(csharpto-get-function-range t)
- '(717 806))
+ '(717 807))
 
 (csharpto-test-run
  (csharpto--test-generate-scenario-description
@@ -722,10 +722,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :cursor-column 'text
           :comment-line  'above
           :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :when (format "I call %s" '(csharpto-get-function-range t))
   :then (format "%s should be returned" '(1115 1491)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "name=\"a\"" t)
- '(csharpto-get-function-range nil)
+ '(csharpto-get-function-range t)
  '(1115 1491))
 
 (csharpto-test-run
@@ -772,10 +772,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :comment-line  'end-of-scope
           )
   :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1739 1978)))
+  :then (format "%s should be returned" '(1739 1925)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
  '(csharpto-get-function-range nil)
- '(1739 1978))
+ '(1739 1925))
 
 (csharpto-test-run
  (csharpto--test-generate-scenario-description
@@ -791,10 +791,10 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
           :comment-line  'end-of-scope
           )
   :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1738 1978)))
+  :then (format "%s should be returned" '(1738 1925)))
  '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
  '(csharpto-get-function-range t)
- '(1738 1978))
+ '(1738 1925))
 
 (csharpto-test-run
  (csharpto--test-generate-scenario-description
