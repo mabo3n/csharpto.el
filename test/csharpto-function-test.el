@@ -103,6 +103,7 @@ function `csharpto--test-buffer-fancy-substring'."
                           (multiple-preceding   . "The function has multiple preceding attributes")
                           (multiple-inline      . "The function has multiple inline attributes")))
     (:cursor-line      . ((preceding-blank      . "The cursor lies in blank lines before the function")
+                          (comments     . "The cursor lies in comments above the function")
                           (attributes   . "The cursor lies in attribute declarations before the function")
                           (signature    . "The cursor lies in the function signature")
                           (beg-of-scope . "The cursor lies in the beginning of function scope")
@@ -124,7 +125,23 @@ function `csharpto--test-buffer-fancy-substring'."
                           (multiple   . "The function specifies multiple generic types")))
     (:type-constraints . ((none     . "The function has no type constraints")
                           (single   . "The function specifies a constraint for a generic type")
-                          (multiple . "The function specifies multiple constraints for generic types"))))
+                          (multiple . "The function specifies multiple constraints for generic types")))
+    (:comment-line     . ((before           .  "There's a line comment \"//\" before the function")
+                          (above-attributes .  "There's a line comment \"//\" above the function attribute(s)")
+                          (attributes       .  "There's a line comment \"//\" within the function attribute(s)")
+                          (above            .  "There's a line comment \"//\" above the function")
+                          (signature        .  "There's a line comment \"//\" within the function signature")
+                          (beg-of-scope     .  "There's a line comment \"//\" in the beginning of scope")
+                          (end-of-scope     .  "There's a line comment \"//\" in the end of scope")
+                          (below            .  "There's a line comment \"//\" below the function")))
+    (:comment-block    . ((before           . "There's a block comment \"/*\" before the function")
+                          (above-attributes . "There's a block comment \"/*\" above the function attribute(s)")
+                          (attributes       . "There's a block comment \"/*\" within the function attribute(s)")
+                          (above            . "There's a block comment \"/*\" above the function")
+                          (signature        . "There's a block comment \"/*\" within the function signature")
+                          (beg-of-scope     . "There's a block comment \"/*\" in the beginning of scope")
+                          (end-of-scope     . "There's a block comment \"/*\" in the end of scope")
+                          (below            . "There's a block comment \"/*\" below the function"))))
   "Mapping between test prop values and their textual description.")
 
 (defun csharpto--test-generate-sentences (&rest plist)
@@ -594,6 +611,394 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
  '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
  '(csharpto-get-function-range t)
  '(97 197))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'text
+          :comment-line  'above)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(426 716)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
+ '(csharpto-get-function-range nil)
+ '(426 716))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'body
+          :cursor-column 'text
+          :comment-line  'above)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(426 717)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
+ '(csharpto-get-function-range t)
+ '(426 717))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(717 805)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "OneLiner" nil)
+ '(csharpto-get-function-range nil)
+ '(717 805))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(717 806)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "OneLiner" nil)
+ '(csharpto-get-function-range t)
+ '(717 806))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :comment-line  'signature)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(807 1070)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "void Log" t)
+ '(csharpto-get-function-range nil)
+ '(807 1070))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :comment-line  'signature)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(807 1071)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "void Log" t)
+ '(csharpto-get-function-range t)
+ '(807 1071))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'comments
+          :cursor-column 'text
+          :comment-line  'above
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1115 1490)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "name=\"a\"" t)
+ '(csharpto-get-function-range nil)
+ '(1115 1490))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'comments
+          :cursor-column 'text
+          :comment-line  'above
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1115 1491)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "name=\"a\"" t)
+ '(csharpto-get-function-range nil)
+ '(1115 1491))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'body
+          :cursor-column 'text
+          :comment-block 'above
+          :comment-block 'beg-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1491 1738)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" (rx "x++") t)
+ '(csharpto-get-function-range nil)
+ '(1491 1738))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'body
+          :cursor-column 'text
+          :comment-block 'above
+          :comment-block 'beg-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(1491 1739)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" (rx "x++") t)
+ '(csharpto-get-function-range t)
+ '(1491 1739))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :comment-line  'above
+          :comment-line  'signature
+          :comment-block 'signature
+          :comment-line  'beg-of-scope
+          :comment-line  'end-of-scope
+          )
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1739 1978)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
+ '(csharpto-get-function-range nil)
+ '(1739 1978))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :comment-line  'above
+          :comment-line  'signature
+          :comment-block 'signature
+          :comment-line  'beg-of-scope
+          :comment-line  'end-of-scope
+          )
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(1738 1978)))
+ '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
+ '(csharpto-get-function-range t)
+ '(1738 1978))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'comments
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'above-attributes)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(428 676)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "This is a" t)
+ '(csharpto-get-function-range nil)
+ '(428 676))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :scope-lf      t
+          :cursor-line   'comments
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'above-attributes)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(428 677)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "This is a" t)
+ '(csharpto-get-function-range t)
+ '(428 677))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'end-of-line
+          :attributes    'single-inline
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(677 743)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "//Comment$" nil)
+ '(csharpto-get-function-range nil)
+ '(677 743))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'end-of-line
+          :attributes    'single-inline
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(677 744)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "//Comment$" nil)
+ '(csharpto-get-function-range t)
+ '(677 744))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'signature)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(744 959)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "void Log" t)
+ '(csharpto-get-function-range nil)
+ '(744 959))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'expression
+          :cursor-line   'signature
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'signature)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(744 960)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "void Log" t)
+ '(csharpto-get-function-range t)
+ '(744 960))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'end-of-scope
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'before
+          :comment-line  'above-attributes
+          :comment-line  'above
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1004 1232)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "end of SomeMethod" t)
+ '(csharpto-get-function-range nil)
+ '(1004 1232))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'brackets
+          :cursor-line   'end-of-scope
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-line  'before
+          :comment-line  'above-attributes
+          :comment-line  'above
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(1004 1233)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "end of SomeMethod" t)
+ '(csharpto-get-function-range t)
+ '(1004 1233))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'preceding-blank
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-block 'before
+          :comment-block 'above-attributes
+          :comment-block 'above
+          :comment-block 'beg-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1299 1300)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "\n +/\\* Block" t)
+ '(csharpto-get-function-range nil)
+ '(1299 1300))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'multi-line
+          :scope-type    'brackets
+          :cursor-line   'preceding-blank
+          :cursor-column 'text
+          :attributes    'multiple-preceding
+          :comment-block 'before
+          :comment-block 'above-attributes
+          :comment-block 'above
+          :comment-block 'beg-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(1299 1558)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "\n +/\\* Block" t)
+ '(csharpto-get-function-range t)
+ '(1299 1558))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :attributes    'multiple-preceding
+          :comment-block 'above-attribute
+          :comment-line  'above-attribute
+          :comment-block 'above
+          :comment-line  'signature
+          :comment-block 'signature
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range nil))
+  :then (format "%s should be returned" '(1559 1956)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" ".+ToString" t)
+ '(csharpto-get-function-range nil)
+ '(1559 1956))
+
+(csharpto-test-run
+ (csharpto--test-generate-scenario-description
+  :given (csharpto--test-generate-sentences
+          :signature     'single-line
+          :scope-type    'expression
+          :cursor-line   'body
+          :cursor-column 'beg-of-line
+          :attributes    'multiple-preceding
+          :comment-block 'above-attribute
+          :comment-line  'above-attribute
+          :comment-block 'above
+          :comment-line  'signature
+          :comment-block 'signature
+          :comment-line  'end-of-scope)
+  :when (format "I call %s" '(csharpto-get-function-range t))
+  :then (format "%s should be returned" '(1558 1956)))
+ '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" ".+ToString" t)
+ '(csharpto-get-function-range t)
+ '(1558 1956))
 
 (provide 'csharpto-function-test)
 
