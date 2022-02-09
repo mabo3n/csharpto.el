@@ -78,7 +78,7 @@ RANGES has form `((BEG END)...)'."
          (list highest-beginning lowest-end))))
 
 (defun csharpto--test-log-code-snippet (point range expected-range)
-  "Output a properly formatted code-snippet.
+  "Log a properly formatted code-snippet.
 
 Format and forward POINT, RANGE and EXPECTED-RANGE to
 function `csharpto--test-buffer-fancy-substring'."
@@ -91,6 +91,20 @@ function `csharpto--test-buffer-fancy-substring'."
     (csharpto--test-log-message
      "...\n%s\n..."
      (csharpto--test-buffer-fancy-substring ranges 1))))
+
+(defun csharpto--test-log-failure (point range expected-range)
+  "Log a failure message with details.
+
+Output a code snippet highlighting POINT, RANGE and EXPECTED-RANGE."
+  (csharpto--test-log-message
+   "FAIL: range mismatch.\n      Expected %s but got %s:\n"
+   expected-range
+   range)
+  (csharpto--test-log-code-snippet
+   (point)
+   range
+   expected-range)
+  )
 
 (defvar csharpto--test-docstrings-alist
   '((:signature     . ((single-line  . "The function has a single-line signature")
@@ -116,6 +130,7 @@ function `csharpto--test-buffer-fancy-substring'."
                        (text              . "The cursor lies in the text")
                        (succeeding-blank  . "The cursor lies in the blank spaces ending the line")
                        (end-of-line       . "The cursor lies in the end of line")))
+    (:class-only    . "The file starts with the class definition (no namespace)")
     (:item-before   . ((none       . "There's nothing before the cursor inside the function")
                        (lambda-exp . "There's a lambda expression before the cursor inside the function")))
     (:item-after    . ((none       . "There's nothing after the cursor inside the function")
@@ -168,8 +183,7 @@ properties, each one being a string or a list of strings."
         (then  (plist-get clauses :then)))
     (concat (and given (concat "GIVEN " (string-join (flatten-list given) "\n  AND ")))
             (and when (concat "\n WHEN " (string-join (flatten-list when) "\n  AND ")))
-            (and then (concat "\n THEN " (string-join (flatten-list then) "\n  AND ")))
-            (and (or given when then) "."))))
+            (and then (concat "\n THEN " (string-join (flatten-list then) "\n  AND "))))))
 
 (defun csharpto--test-buffer-setup (fixture search-regexp goto-beg-of-match)
   "Setup current buffer with FIXTURE contents for the test.
@@ -183,822 +197,477 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   (when goto-beg-of-match
     (goto-char (match-beginning 0))))
 
-(defun csharpto-test-run (scenario arrange-function fcall expected-range)
-  "Run a test according to arguments."
-  (csharpto--test-log-message "\n%s\n\n" scenario)
-  (with-temp-buffer
-    (eval arrange-function)
-    (let* ((returned-range (ignore-errors (eval fcall)))
-           (ranges-match-p (equal returned-range expected-range)))
-      (if ranges-match-p
-          (csharpto--test-log-message "Pass\n")
-        (csharpto--test-log-message "Fail: range mismatch\n\n")
-        (csharpto--test-log-message "%s ⇒ %s\n\n" fcall returned-range)
-        (csharpto--test-log-message "Expected: %s\n" expected-range)
-        (csharpto--test-log-code-snippet (point) returned-range expected-range))))
-  (csharpto--test-log-message "\n%s" (make-string 30 ?-)))
+(defun csharpto-test-run (&rest properties)
+  "Run a test according to PROPERTIES.
+
+PROPERTIES is a property list (PROP1 VALUE1 PROP2 VALUE2 ...)
+where the supported properties and their respective value are:
+
+:id     -> A unique identifier to the test
+
+:setup  -> A property list (PROP1 VALUE1 PROP2 VALUE2 ...)
+           with parameters to setup the buffer for the test.
+           Supported properties and their respective value are:
+
+           :file -> A string representing a (relative) file path
+                    to the fixture file to be used in the test.
+
+           :find -> A REGEXP to search for (and move the cursor to)
+                    a pattern in the fixture file.
+
+           :goto-beginning-of-match
+                 -> Whether the cursor should be moved to the
+                    beginning of the text matched by :find REGEXP.
+
+:props  -> A property list (PROP1 VALUE1 PROP2 VALUE2 ...)
+           with properties detailing the test scenario.
+           For all supported properties see variable
+           `csharpto--test-docstrings-alist'.
+
+:test   -> A list of EXPECTATIONS to be tested for the scenario.
+           EXPECTATIONS has form ((FCALL RANGE [TEXT]) ...) where
+           FCALL is a form to be evaluated in the test,
+           RANGE is the expected return of evaluating FCALL
+           and has form (BEG END), and
+           TEXT is a (optional) string detailing the expectation."
+  (let ((test-id          (plist-get properties :id))
+        (setup-plist      (plist-get properties :setup))
+        (assertions-alist (plist-get properties :test))
+        (scenario-plist   (plist-get properties :props)))
+
+    (csharpto--test-log-message "\n %1$s Test #%2$s %1$s \n"
+                                (make-string 24 ?-)
+                                test-id)
+
+    (let ((setup-file   (plist-get setup-plist :file))
+          (setup-regexp (plist-get setup-plist :find))
+          (setup-regexp-goto-beg
+           (plist-get setup-plist :goto-beginning-of-match)))
+
+      (csharpto--test-log-message
+       "\nFile: %s\nCursor in the %s of match: \"%s\"\n"
+       setup-file
+       (if setup-regexp-goto-beg "beginning" "end")
+       setup-regexp)
+
+      (csharpto--test-log-message
+       "\n%s"
+       (csharpto--test-generate-scenario-description
+        :given (apply #'csharpto--test-generate-sentences scenario-plist)))
+
+      (cl-loop
+       for (fcall expected-range expectation-text) in assertions-alist
+       do (with-temp-buffer
+            (csharpto--test-buffer-setup setup-file
+                                         setup-regexp
+                                         setup-regexp-goto-beg)
+
+            (csharpto--test-log-message
+             (csharpto--test-generate-scenario-description
+              :when (concat "I call '" (symbol-name (car fcall))
+                            (and (cdr fcall)
+                                 (format " with args '%s" (cdr fcall))))
+              :then (or expectation-text
+                        (format "'%s should be returned"
+                                expected-range))))
+
+            (let* ((returned-range (ignore-errors (eval fcall)))
+                   (ranges-match-p (equal returned-range expected-range)))
+              (if ranges-match-p
+                  (csharpto--test-log-message "\n      PASS")
+                (csharpto--test-log-message "\n      ")
+                (csharpto--test-log-failure (point) returned-range expected-range))))))))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'signature
-          :cursor-column 'text)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(421 581)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "public MyEntity(string name)" t)
- '(csharpto-get-function-range nil)
- '(421 581))
+ :id 1
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "public MyEntity(string name)"
+              :goto-beginning-of-match t)
+ :test  '(((csharpto-get-function-range nil) (421 581))
+          ((csharpto-get-function-range t)   (421 582)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :scope-lf      t
+              :cursor-line   'signature
+              :cursor-column 'text))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      'break
-          :cursor-line   'body
-          :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(421 582)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "  logs = new List<LogEntry>" t)
- '(csharpto-get-function-range t)
- '(421 582))
+ :id 2
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "^\n\s *int OneLiner()"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (581 582))
+         ((csharpto-get-function-range t)   (581 628)))
+ :props (list :cursor-line   'blank
+              :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :cursor-line   'blank
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(581 582)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
- '(csharpto-get-function-range nil)
- '(581 582))
+ :id 3
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "3 \\+ 4 \\+ 5; $"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (582 628))
+         ((csharpto-get-function-range t)   (582 630)))
+ :props (list :scope-type    'expression
+              :cursor-line   'body
+              :cursor-column 'succeeding-blank))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :cursor-line   'blank
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(581 628)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "^\n\s *int OneLiner()" t)
- '(csharpto-get-function-range t)
- '(581 628))
+ :id 4
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "level = default\n\\s *)"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (630 768))
+         ((csharpto-get-function-range t)   (630 769)))
+ :props (list :signature     'multi-line
+              :scope-type    'expression
+              :scope-lf      t
+              :cursor-line   'signature
+              :cursor-column 'preceding-blank))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'succeeding-blank)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(582 628)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
- '(csharpto-get-function-range nil)
- '(582 628))
+ :id 5
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "return a \\+ b;"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (769 888))
+         ((csharpto-get-function-range t)   (769 891)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :cursor-line   'body
+              :cursor-column 'end-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'succeeding-blank)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(582 630)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "3 \\+ 4 \\+ 5; $" nil)
- '(csharpto-get-function-range t)
- '(582 630))
+ :id 6
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "\n\n\\s +public IEnumerable"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range t) (888 1010)))
+ :props (list :cursor-line   'blank
+              :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :scope-lf      t
-          :cursor-line   'signature
-          :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(630 768)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
- '(csharpto-get-function-range nil)
- '(630 768))
+ :id 7
+ :setup (list :file "./fixtures/Entity.cs"
+              :find "=> this"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (891 1010))
+         ((csharpto-get-function-range t)   (888 1010)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'body
+              :cursor-column 'end-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :scope-lf      t
-          :cursor-line   'signature
-          :cursor-column 'preceding-blank)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(630 769)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "level = default\n\\s *)" nil)
- '(csharpto-get-function-range t)
- '(630 769))
+ :id 8
+ :setup (list :file "./fixtures/ClassWithSingleFunction.cs"
+              :find "^.+SomeFunction"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (128 290))
+         ((csharpto-get-function-range t)   (127 290)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :cursor-line   'signature
+              :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'body
-          :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(769 888)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
- '(csharpto-get-function-range nil)
- '(769 888))
+ :id 9
+ :setup (list :file "./fixtures/Attributes.cs"
+              :find "ChangeName() {"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (660 983)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :attributes    'single-inline
+              :cursor-line   'signature
+              :cursor-column 'end-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'body
-          :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(769 891)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "return a \\+ b;" nil)
- '(csharpto-get-function-range t)
- '(769 891))
+ :id 10
+ :setup (list :file "./fixtures/Attributes.cs"
+              :find "^.+\\[Theory\\]"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (177 659)))
+ :props (list :signature     'multi-line
+              :scope-type    'expression
+              :scope-lf      t
+              :attributes    'multiple-preceding
+              :cursor-line   'attributes
+              :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :cursor-line   'blank
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(888 1010)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "\n\n\\s +public IEnumerable" t)
- '(csharpto-get-function-range t)
- '(888 1010))
+ :id 11
+ :setup (list :file "./fixtures/Attributes.cs"
+              :find "() => new"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range t) (177 660)))
+ :props (list :signature     'multi-line
+              :scope-type    'expression
+              :scope-lf      t
+              :attributes    'multiple-preceding
+              :cursor-line   'body
+              :cursor-column 'text))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(891 1010)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
- '(csharpto-get-function-range nil)
- '(891 1010))
+ :id 12
+ :setup (list :file "./fixtures/ClassOnlyNoImports.cs"
+              :find "Hello"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (035 129))
+         ((csharpto-get-function-range t)   (035 129)))
+ :props (list :cursor-line   'signature))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(888 1010)))
- '(csharpto--test-buffer-setup "./fixtures/Entity.cs" "=> this" nil)
- '(csharpto-get-function-range t)
- '(888 1010))
+ :id 13
+ :setup (list :file "./fixtures/BlogRepository.cs"
+              :find "MinValue\n"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (282 616))
+         ((csharpto-get-function-range t)   (282 617)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :scope-lf      t
+              :cursor-line   'body
+              :cursor-column 'beg-of-line
+              :item-before  'lambda-exp))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'signature
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(127 290)))
- '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
- '(csharpto-get-function-range t)
- '(127 290))
+ :id 14
+ :setup (list :file "./fixtures/BlogRepository.cs"
+              :find "        \.First"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (617 795))
+         ((csharpto-get-function-range t)   (617 796)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :scope-lf      t
+              :cursor-line   'body
+              :cursor-column 'preceding-blank
+              :item-before   'lambda-exp))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'signature
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(128 290)))
- '(csharpto--test-buffer-setup "./fixtures/ClassWithSingleFunction.cs" "^.+SomeFunction" t)
- '(csharpto-get-function-range nil)
- '(128 290))
+ :id 15
+ :setup (list :file "./fixtures/BlogRepository.cs"
+              :find "(owner),"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (1226 1517))
+         ((csharpto-get-function-range t)   (1225 1517)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :scope-lf      t
+              :attributes    'single-preceding
+              :cursor-line   'body
+              :cursor-column 'end-of-line
+              :item-before   'lambda-exp
+              :item-after    'lambda-exp))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :attributes    'single-inline
-          :cursor-line   'signature
-          :cursor-column 'end-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(660 983)))
- '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "ChangeName() {" nil)
- '(csharpto-get-function-range nil)
- '(660 983))
+ :id 16
+ :setup (list :file "./fixtures/Generics.cs"
+              :find "=> default"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (63 97))
+         ((csharpto-get-function-range t)   (63 98)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'body
+              :cursor-column 'text
+              :generic-type  'single))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :scope-lf      t
-          :attributes    'multiple-preceding
-          :cursor-line   'attributes
-          :cursor-column 'beg-of-line)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(177 659)))
- '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "^.+\\[Theory\\]" t)
- '(csharpto-get-function-range nil)
- '(177 659))
+ :id 17
+ :setup (list :file "./fixtures/Generics.cs"
+              :find "T: new"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (98 197))
+         ((csharpto-get-function-range t)   (97 197)))
+ :props (list :signature     'multi-line
+              :scope-type    'brackets
+              :cursor-line   'signature
+              :cursor-column 'text
+              :generic-type  'multiple
+              :type-constraint 'single))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :scope-lf      t
-          :attributes    'multiple-preceding
-          :cursor-line   'body
-          :cursor-column 'text)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(177 660)))
- '(csharpto--test-buffer-setup "./fixtures/Attributes.cs" "() => new" nil)
- '(csharpto-get-function-range t)
- '(177 660))
-
-;; Regression
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given `("File starts with the class definition (no namespace)"
-           ,@(csharpto--test-generate-sentences
-              :cursor-line   'signature))
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(035 129)))
- '(csharpto--test-buffer-setup "./fixtures/ClassOnlyNoImports.cs" "Hello" t)
- '(csharpto-get-function-range nil)
- '(035 129))
+ :id 18
+ :setup (list :file "./fixtures/Comments.cs"
+              :find "Id = "
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (421 716))
+         ((csharpto-get-function-range t)   (421 717)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :scope-lf      t
+              :cursor-line   'body
+              :cursor-column 'text
+              :comment-line  'above))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :item-before  'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(282 616)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-range nil)
- '(282 616))
+ :id 19
+ :setup (list :file "./fixtures/Comments.cs"
+              :find "OneLiner"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (717 805))
+         ((csharpto-get-function-range t)   (717 807)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'signature
+              :cursor-column 'text
+              :comment-line  'end-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(282 617)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-range t)
- '(282 617))
+ :id 20
+ :setup (list :file "./fixtures/Comments.cs"
+              :find "void Log"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (807 1070))
+         ((csharpto-get-function-range t)   (807 1071)))
+ :props (list :signature     'multi-line
+              :scope-type    'expression
+              :cursor-line   'signature
+              :cursor-column 'text
+              :comment-line  'signature))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(282 617)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "MinValue\n" nil)
- '(csharpto-get-function-range t)
- '(282 617))
+ :id 21
+ :setup (list :file "./fixtures/Comments.cs"
+              :find "name=\"a\""
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1115 1490))
+         ((csharpto-get-function-range t)   (1115 1491)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :cursor-line   'comments
+              :cursor-column 'text
+              :comment-line  'above
+              :comment-line  'end-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'preceding-blank
-          :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(617 795)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
- '(csharpto-get-function-range nil)
- '(617 795))
+ :id 22
+ :setup (list :file "./fixtures/Comments.cs"
+              :find (rx "x++")
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1491 1738))
+         ((csharpto-get-function-range t)   (1491 1739)))
+ :props (list :signature     'multi-line
+              :scope-type    'brackets
+              :cursor-line   'body
+              :cursor-column 'text
+              :comment-block 'above
+              :comment-block 'beg-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'preceding-blank
-          :item-before   'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(617 796)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "        \.First" t)
- '(csharpto-get-function-range t)
- '(617 796))
+ :id 23
+ :setup (list :file "./fixtures/Comments.cs"
+              :find ".+ToString"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1739 1925))
+         ((csharpto-get-function-range t)   (1738 1925)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'body
+              :cursor-column 'beg-of-line
+              :comment-line  'above
+              :comment-line  'signature
+              :comment-block 'signature
+              :comment-line  'beg-of-scope
+              :comment-line  'end-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :attributes    'single-preceding
-          :cursor-line   'body
-          :cursor-column 'end-of-line
-          :item-before   'lambda-exp
-          :item-after    'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1226 1517)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
- '(csharpto-get-function-range nil)
- '(1226 1517))
+ :id 24
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find "This is a"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (428 676))
+         ((csharpto-get-function-range t)   (428 677)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :scope-lf      t
+              :cursor-line   'comments
+              :cursor-column 'text
+              :attributes    'multiple-preceding
+              :comment-line  'above-attributes))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :attributes    'single-preceding
-          :cursor-line   'body
-          :cursor-column 'end-of-line
-          :item-before   'lambda-exp
-          :item-after    'lambda-exp)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1225 1517)))
- '(csharpto--test-buffer-setup "./fixtures/BlogRepository.cs" "(owner)," nil)
- '(csharpto-get-function-range t)
- '(1225 1517))
+ :id 25
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find "//Comment$"
+              :goto-beginning-of-match nil)
+ :test '(((csharpto-get-function-range nil) (677 743))
+         ((csharpto-get-function-range t)   (677 744)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'signature
+              :cursor-column 'end-of-line
+              :attributes    'single-inline
+              :comment-line  'end-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'text
-          :generic-type  'single)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(63 98)))
- '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
- '(csharpto-get-function-range t)
- '(63 98))
+ :id 26
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find "void Log"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (744 959))
+         ((csharpto-get-function-range t)   (744 960)))
+ :props (list :signature     'multi-line
+              :scope-type    'expression
+              :cursor-line   'signature
+              :cursor-column 'text
+              :attributes    'multiple-preceding
+              :comment-line  'signature))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'text
-          :generic-type  'single)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(63 97)))
- '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "=> default" nil)
- '(csharpto-get-function-range nil)
- '(63 97))
+ :id 27
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find "end of SomeMethod"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1004 1232))
+         ((csharpto-get-function-range t)   (1004 1233)))
+ :props (list :signature     'single-line
+              :scope-type    'brackets
+              :cursor-line   'end-of-scope
+              :cursor-column 'text
+              :attributes    'multiple-preceding
+              :comment-line  'before
+              :comment-line  'above-attributes
+              :comment-line  'above
+              :comment-line  'end-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'signature
-          :cursor-column 'text
-          :generic-type  'multiple
-          :type-constraint 'single)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(98 197)))
- '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
- '(csharpto-get-function-range nil)
- '(98 197))
+ :id 28
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find "\n +/\\* Block"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1299 1300))
+         ((csharpto-get-function-range t)   (1299 1558)))
+ :props (list :signature     'multi-line
+              :scope-type    'brackets
+              :cursor-line   'preceding-blank
+              :cursor-column 'text
+              :attributes    'multiple-preceding
+              :comment-block 'before
+              :comment-block 'above-attributes
+              :comment-block 'above
+              :comment-block 'beg-of-scope))
 
 (csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'signature
-          :cursor-column 'text
-          :generic-type  'multiple
-          :type-constraint 'single)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(97 197)))
- '(csharpto--test-buffer-setup "./fixtures/Generics.cs" "T: new" t)
- '(csharpto-get-function-range t)
- '(97 197))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'text
-          :comment-line  'above)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(421 716)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
- '(csharpto-get-function-range nil)
- '(421 716))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'body
-          :cursor-column 'text
-          :comment-line  'above)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(421 717)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "Id = " nil)
- '(csharpto-get-function-range t)
- '(421 717))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(717 805)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "OneLiner" nil)
- '(csharpto-get-function-range nil)
- '(717 805))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(717 807)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "OneLiner" nil)
- '(csharpto-get-function-range t)
- '(717 807))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :comment-line  'signature)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(807 1070)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "void Log" t)
- '(csharpto-get-function-range nil)
- '(807 1070))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :comment-line  'signature)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(807 1071)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "void Log" t)
- '(csharpto-get-function-range t)
- '(807 1071))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'comments
-          :cursor-column 'text
-          :comment-line  'above
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1115 1490)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "name=\"a\"" t)
- '(csharpto-get-function-range nil)
- '(1115 1490))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'comments
-          :cursor-column 'text
-          :comment-line  'above
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1115 1491)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" "name=\"a\"" t)
- '(csharpto-get-function-range t)
- '(1115 1491))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'body
-          :cursor-column 'text
-          :comment-block 'above
-          :comment-block 'beg-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1491 1738)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" (rx "x++") t)
- '(csharpto-get-function-range nil)
- '(1491 1738))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'body
-          :cursor-column 'text
-          :comment-block 'above
-          :comment-block 'beg-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1491 1739)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" (rx "x++") t)
- '(csharpto-get-function-range t)
- '(1491 1739))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :comment-line  'above
-          :comment-line  'signature
-          :comment-block 'signature
-          :comment-line  'beg-of-scope
-          :comment-line  'end-of-scope
-          )
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1739 1925)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
- '(csharpto-get-function-range nil)
- '(1739 1925))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :comment-line  'above
-          :comment-line  'signature
-          :comment-block 'signature
-          :comment-line  'beg-of-scope
-          :comment-line  'end-of-scope
-          )
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1738 1925)))
- '(csharpto--test-buffer-setup "./fixtures/Comments.cs" ".+ToString" t)
- '(csharpto-get-function-range t)
- '(1738 1925))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'comments
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'above-attributes)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(428 676)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "This is a" t)
- '(csharpto-get-function-range nil)
- '(428 676))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :scope-lf      t
-          :cursor-line   'comments
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'above-attributes)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(428 677)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "This is a" t)
- '(csharpto-get-function-range t)
- '(428 677))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'end-of-line
-          :attributes    'single-inline
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(677 743)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "//Comment$" nil)
- '(csharpto-get-function-range nil)
- '(677 743))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'end-of-line
-          :attributes    'single-inline
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(677 744)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "//Comment$" nil)
- '(csharpto-get-function-range t)
- '(677 744))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'signature)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(744 959)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "void Log" t)
- '(csharpto-get-function-range nil)
- '(744 959))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'expression
-          :cursor-line   'signature
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'signature)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(744 960)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "void Log" t)
- '(csharpto-get-function-range t)
- '(744 960))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'end-of-scope
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'before
-          :comment-line  'above-attributes
-          :comment-line  'above
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1004 1232)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "end of SomeMethod" t)
- '(csharpto-get-function-range nil)
- '(1004 1232))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'brackets
-          :cursor-line   'end-of-scope
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-line  'before
-          :comment-line  'above-attributes
-          :comment-line  'above
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1004 1233)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "end of SomeMethod" t)
- '(csharpto-get-function-range t)
- '(1004 1233))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'preceding-blank
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-block 'before
-          :comment-block 'above-attributes
-          :comment-block 'above
-          :comment-block 'beg-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1299 1300)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "\n +/\\* Block" t)
- '(csharpto-get-function-range nil)
- '(1299 1300))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'multi-line
-          :scope-type    'brackets
-          :cursor-line   'preceding-blank
-          :cursor-column 'text
-          :attributes    'multiple-preceding
-          :comment-block 'before
-          :comment-block 'above-attributes
-          :comment-block 'above
-          :comment-block 'beg-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1299 1558)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" "\n +/\\* Block" t)
- '(csharpto-get-function-range t)
- '(1299 1558))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :attributes    'multiple-preceding
-          :comment-block 'above-attribute
-          :comment-line  'above-attribute
-          :comment-block 'above
-          :comment-line  'signature
-          :comment-block 'signature
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range nil))
-  :then (format "%s should be returned" '(1559 1956)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" ".+ToString" t)
- '(csharpto-get-function-range nil)
- '(1559 1956))
-
-(csharpto-test-run
- (csharpto--test-generate-scenario-description
-  :given (csharpto--test-generate-sentences
-          :signature     'single-line
-          :scope-type    'expression
-          :cursor-line   'body
-          :cursor-column 'beg-of-line
-          :attributes    'multiple-preceding
-          :comment-block 'above-attribute
-          :comment-line  'above-attribute
-          :comment-block 'above
-          :comment-line  'signature
-          :comment-block 'signature
-          :comment-line  'end-of-scope)
-  :when (format "I call %s" '(csharpto-get-function-range t))
-  :then (format "%s should be returned" '(1558 1956)))
- '(csharpto--test-buffer-setup "./fixtures/CommentsAndAttributes.cs" ".+ToString" t)
- '(csharpto-get-function-range t)
- '(1558 1956))
+ :id 29
+ :setup (list :file "./fixtures/CommentsAndAttributes.cs"
+              :find ".+ToString"
+              :goto-beginning-of-match t)
+ :test '(((csharpto-get-function-range nil) (1559 1956))
+         ((csharpto-get-function-range t)   (1558 1956)))
+ :props (list :signature     'single-line
+              :scope-type    'expression
+              :cursor-line   'body
+              :cursor-column 'beg-of-line
+              :attributes    'multiple-preceding
+              :comment-block 'above-attribute
+              :comment-line  'above-attribute
+              :comment-block 'above
+              :comment-line  'signature
+              :comment-block 'signature
+              :comment-line  'end-of-scope))
 
 (provide 'csharpto-function-test)
 
