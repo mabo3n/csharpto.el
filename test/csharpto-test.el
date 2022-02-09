@@ -153,7 +153,7 @@ Output a code snippet highlighting POINT, RANGE and EXPECTED-RANGE."
    expected-range
    range)
   (csharpto--test-log-code-snippet
-   (point)
+   point
    range
    expected-range))
 
