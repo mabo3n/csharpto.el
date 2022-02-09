@@ -10,6 +10,9 @@
 (require 'dash)
 (require 'subr-x)
 
+(defconst csharpto--test-buffer-name "*Test run*"
+  "Name of the buffer created to output test results.")
+
 (defvar csharpto--test-sentences-alist
   '((:cursor-line   . ((preceding-blank  . "The cursor lies in blank lines before the text object")
                        (under            . "The cursor lies under the text object")
@@ -51,10 +54,17 @@ properties, each one being a string or a list of strings."
             (and when (concat "\n WHEN " (string-join (flatten-list when) "\n  AND ")))
             (and then (concat "\n THEN " (string-join (flatten-list then) "\n  AND "))))))
 
+(defun csharpto--test-reset-buffer ()
+  "If existent, kill the test buffer."
+  (interactive)
+  (ignore-errors (kill-buffer csharpto--test-buffer-name)))
+
+(csharpto--test-reset-buffer)
+
 (defun csharpto--test-log-message (format-string &rest args)
   "Log FORMAT-STRING with ARGS into the test run buffer."
   (save-excursion
-    (let ((test-buffer "*Test run*"))
+    (let ((test-buffer csharpto--test-buffer-name))
       (unless (get-buffer test-buffer)
         (set-buffer (get-buffer-create test-buffer))
         (insert "*** Test run ***\n\n")

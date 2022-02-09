@@ -62,6 +62,8 @@
                       (end-of-scope     . "There's a block comment \"/**/\" in the end of scope")
                       (below            . "There's a block comment \"/**/\" below the function")))))
 
+(csharpto--test-reset-buffer)
+
 (csharpto-test-run
  :id 'F1
  :setup (list :file "./fixtures/Entity.cs"
