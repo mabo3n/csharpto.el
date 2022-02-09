@@ -7,20 +7,19 @@
 (rx-define comment (or line-comment block-comment))
 (rx-define blank-or-comment (seq (0+ space) (opt comment)))
 
-(defun csharpto-get-function-range
-    (&optional include-around)
-  "Return (BEG END) of function under point.
+(defun csharpto-get-function-range (&optional include-around)
+  "Return a line-wise range (BEG END) of function under point.
 
 If INCLUDE-AROUND is non-nil, include surrouding blank lines
 following vim-like conventions (return \"a\" function).
 
-This uses a heuristic based method to find the boudaries
+This uses a heuristic-based approach to find boudaries
 of regular/expression-bodied functions.
 
 It should work in most cases given:
   1. Functions are separated by blank lines;
-  2. There's no blank lines inside a function header
-     or expression-bodied function;
+  2. There's no blank lines within a function signature,
+     nor anywhere inside an expression-bodied function;
   3. There's no fields/properties between functions;
   4. There's no weird indentation and comments."
   (let* ((preceding-blank-lines-group 1)
