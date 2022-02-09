@@ -133,6 +133,8 @@ Output a code snippet highlighting POINT, RANGE and EXPECTED-RANGE."
     (:class-only    . "The file starts with the class definition (no namespace)")
     (:item-before   . ((none       . "There's nothing before the cursor inside the function")
                        (lambda-exp . "There's a lambda expression before the cursor inside the function")))
+    (:item-under    . ((none       . "There's nothing under the cursor inside the function")
+                       (lambda-exp . "There's a lambda expression under the cursor inside the function")))
     (:item-after    . ((none       . "There's nothing after the cursor inside the function")
                        (lambda-exp . "There's a lambda expression after the cursor inside the function")))
     (:generic-type     . ((none      . "The function does not specifies generic types")
@@ -283,8 +285,8 @@ where the supported properties and their respective value are:
  :setup (list :file "./fixtures/Entity.cs"
               :find "public MyEntity(string name)"
               :goto-beginning-of-match t)
- :test  '(((csharpto-get-function-range nil) (421 581))
-          ((csharpto-get-function-range t)   (421 582)))
+ :test '(((csharpto-get-function-range nil) (421 581))
+        ((csharpto-get-function-range t)    (421 582)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -340,9 +342,10 @@ where the supported properties and their respective value are:
 (csharpto-test-run
  :id 6
  :setup (list :file "./fixtures/Entity.cs"
-              :find "\n\n\\s +public IEnumerable"
+              :find "\n\n.+IEnumerable"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range t) (888 1010)))
+ :test '(((csharpto-get-function-range nil) (888 891))
+         ((csharpto-get-function-range t)   (888 1010)))
  :props (list :cursor-line   'blank
               :cursor-column 'beg-of-line))
 
@@ -375,7 +378,8 @@ where the supported properties and their respective value are:
  :setup (list :file "./fixtures/Attributes.cs"
               :find "ChangeName() {"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (660 983)))
+ :test '(((csharpto-get-function-range nil) (660 983))
+         ((csharpto-get-function-range t)   (659 983)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :attributes    'single-inline
@@ -387,7 +391,8 @@ where the supported properties and their respective value are:
  :setup (list :file "./fixtures/Attributes.cs"
               :find "^.+\\[Theory\\]"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (177 659)))
+ :test '(((csharpto-get-function-range nil) (177 659))
+         ((csharpto-get-function-range t)   (177 660)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :scope-lf      t
@@ -400,13 +405,15 @@ where the supported properties and their respective value are:
  :setup (list :file "./fixtures/Attributes.cs"
               :find "() => new"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range t) (177 660)))
+ :test '(((csharpto-get-function-range nil) (177 659))
+         ((csharpto-get-function-range t)   (177 660)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :scope-lf      t
               :attributes    'multiple-preceding
               :cursor-line   'body
-              :cursor-column 'text))
+              :cursor-column 'text
+              :item-under    'lambda-exp))
 
 (csharpto-test-run
  :id 12
