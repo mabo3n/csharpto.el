@@ -103,10 +103,9 @@ Output a code snippet highlighting POINT, RANGE and EXPECTED-RANGE."
   (csharpto--test-log-code-snippet
    (point)
    range
-   expected-range)
-  )
+   expected-range))
 
-(defvar csharpto--test-docstrings-alist
+(defvar csharpto--test-sentences-alist
   '((:signature     . ((single-line  . "The function has a single-line signature")
                        (multi-line   . "The function has a multi-line signature")))
     (:scope-type    . ((expression   . "The function is expression-bodied =>")
@@ -159,16 +158,17 @@ Output a code snippet highlighting POINT, RANGE and EXPECTED-RANGE."
                        (beg-of-scope     . "There's a block comment \"/**/\" in the beginning of scope")
                        (end-of-scope     . "There's a block comment \"/**/\" in the end of scope")
                        (below            . "There's a block comment \"/**/\" below the function"))))
-  "Mapping between test prop values and their textual description.")
+  "Mapping between test prop values and their equivalent sentences.")
+
 
 (defun csharpto--test-generate-sentences (&rest plist)
   "Return a list of corresponding sentences for each prop in PLIST.
 
-See variable `csharpto--test-docstrings-alist'."
+See variable `csharpto--test-sentences-alist'."
   (when-let* ((plist plist)
               (key   (car plist))
               (value (cadr plist))
-              (options  (alist-get key csharpto--test-docstrings-alist))
+              (options  (alist-get key csharpto--test-sentences-alist))
               (sentence (or (and (stringp options) value options)
                             (alist-get value options)
                             (format "Property %s has value '%s"
@@ -224,7 +224,7 @@ where the supported properties and their respective value are:
 :props  -> A property list (PROP1 VALUE1 PROP2 VALUE2 ...)
            with properties detailing the test scenario.
            For all supported properties see variable
-           `csharpto--test-docstrings-alist'.
+           `csharpto--test-sentences-alist'.
 
 :test   -> A list of EXPECTATIONS to be tested for the scenario.
            EXPECTATIONS has form ((FCALL RANGE [TEXT]) ...) where
