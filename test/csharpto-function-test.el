@@ -8,7 +8,7 @@
 (require 'csharpto-test)
 
 (csharpto-test-run
- :id 1
+ :id 'F1
  :setup (list :file "./fixtures/Entity.cs"
               :find "public MyEntity(string name)"
               :goto-beginning-of-match t)
@@ -21,7 +21,7 @@
               :cursor-column 'text))
 
 (csharpto-test-run
- :id 2
+ :id 'F2
  :setup (list :file "./fixtures/Entity.cs"
               :find "^\n\s *int OneLiner()"
               :goto-beginning-of-match t)
@@ -31,7 +31,7 @@
               :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- :id 3
+ :id 'F3
  :setup (list :file "./fixtures/Entity.cs"
               :find "3 \\+ 4 \\+ 5; $"
               :goto-beginning-of-match nil)
@@ -42,7 +42,7 @@
               :cursor-column 'succeeding-blank))
 
 (csharpto-test-run
- :id 4
+ :id 'F4
  :setup (list :file "./fixtures/Entity.cs"
               :find "level = default\n\\s *)"
               :goto-beginning-of-match nil)
@@ -55,7 +55,7 @@
               :cursor-column 'preceding-blank))
 
 (csharpto-test-run
- :id 5
+ :id 'F5
  :setup (list :file "./fixtures/Entity.cs"
               :find "return a \\+ b;"
               :goto-beginning-of-match nil)
@@ -67,7 +67,7 @@
               :cursor-column 'end-of-line))
 
 (csharpto-test-run
- :id 6
+ :id 'F6
  :setup (list :file "./fixtures/Entity.cs"
               :find "\n\n.+IEnumerable"
               :goto-beginning-of-match t)
@@ -77,7 +77,7 @@
               :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- :id 7
+ :id 'F7
  :setup (list :file "./fixtures/Entity.cs"
               :find "=> this"
               :goto-beginning-of-match nil)
@@ -89,7 +89,7 @@
               :cursor-column 'end-of-line))
 
 (csharpto-test-run
- :id 8
+ :id 'F8
  :setup (list :file "./fixtures/ClassWithSingleFunction.cs"
               :find "^.+SomeFunction"
               :goto-beginning-of-match t)
@@ -101,7 +101,7 @@
               :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- :id 9
+ :id 'F9
  :setup (list :file "./fixtures/Attributes.cs"
               :find "ChangeName() {"
               :goto-beginning-of-match nil)
@@ -114,7 +114,7 @@
               :cursor-column 'end-of-line))
 
 (csharpto-test-run
- :id 10
+ :id 'F10
  :setup (list :file "./fixtures/Attributes.cs"
               :find "^.+\\[Theory\\]"
               :goto-beginning-of-match t)
@@ -128,7 +128,7 @@
               :cursor-column 'beg-of-line))
 
 (csharpto-test-run
- :id 11
+ :id 'F11
  :setup (list :file "./fixtures/Attributes.cs"
               :find "() => new"
               :goto-beginning-of-match nil)
@@ -143,7 +143,7 @@
               :item-under    'lambda-exp))
 
 (csharpto-test-run
- :id 12
+ :id 'F12
  :setup (list :file "./fixtures/ClassOnlyNoImports.cs"
               :find "Hello"
               :goto-beginning-of-match t)
@@ -152,7 +152,7 @@
  :props (list :cursor-line   'signature))
 
 (csharpto-test-run
- :id 13
+ :id 'F13
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "MinValue\n"
               :goto-beginning-of-match nil)
@@ -166,7 +166,7 @@
               :item-before  'lambda-exp))
 
 (csharpto-test-run
- :id 14
+ :id 'F14
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "        \.First"
               :goto-beginning-of-match t)
@@ -180,7 +180,7 @@
               :item-before   'lambda-exp))
 
 (csharpto-test-run
- :id 15
+ :id 'F15
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "(owner),"
               :goto-beginning-of-match nil)
@@ -196,7 +196,7 @@
               :item-after    'lambda-exp))
 
 (csharpto-test-run
- :id 16
+ :id 'F16
  :setup (list :file "./fixtures/Generics.cs"
               :find "=> default"
               :goto-beginning-of-match nil)
@@ -209,7 +209,7 @@
               :generic-type  'single))
 
 (csharpto-test-run
- :id 17
+ :id 'F17
  :setup (list :file "./fixtures/Generics.cs"
               :find "T: new"
               :goto-beginning-of-match t)
@@ -223,7 +223,7 @@
               :type-constraint 'single))
 
 (csharpto-test-run
- :id 18
+ :id 'F18
  :setup (list :file "./fixtures/Comments.cs"
               :find "Id = "
               :goto-beginning-of-match nil)
@@ -237,7 +237,7 @@
               :comment-line  'above))
 
 (csharpto-test-run
- :id 19
+ :id 'F19
  :setup (list :file "./fixtures/Comments.cs"
               :find "OneLiner"
               :goto-beginning-of-match nil)
@@ -250,7 +250,7 @@
               :comment-line  'end-of-scope))
 
 (csharpto-test-run
- :id 20
+ :id 'F20
  :setup (list :file "./fixtures/Comments.cs"
               :find "void Log"
               :goto-beginning-of-match t)
@@ -263,7 +263,7 @@
               :comment-line  'signature))
 
 (csharpto-test-run
- :id 21
+ :id 'F21
  :setup (list :file "./fixtures/Comments.cs"
               :find "name=\"a\""
               :goto-beginning-of-match t)
@@ -277,7 +277,7 @@
               :comment-line  'end-of-scope))
 
 (csharpto-test-run
- :id 22
+ :id 'F22
  :setup (list :file "./fixtures/Comments.cs"
               :find (rx "x++")
               :goto-beginning-of-match t)
@@ -291,7 +291,7 @@
               :comment-block 'beg-of-scope))
 
 (csharpto-test-run
- :id 23
+ :id 'F23
  :setup (list :file "./fixtures/Comments.cs"
               :find ".+ToString"
               :goto-beginning-of-match t)
@@ -308,7 +308,7 @@
               :comment-line  'end-of-scope))
 
 (csharpto-test-run
- :id 24
+ :id 'F24
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "This is a"
               :goto-beginning-of-match t)
@@ -323,7 +323,7 @@
               :comment-line  'above-attributes))
 
 (csharpto-test-run
- :id 25
+ :id 'F25
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "//Comment$"
               :goto-beginning-of-match nil)
@@ -337,7 +337,7 @@
               :comment-line  'end-of-scope))
 
 (csharpto-test-run
- :id 26
+ :id 'F26
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "void Log"
               :goto-beginning-of-match t)
@@ -351,7 +351,7 @@
               :comment-line  'signature))
 
 (csharpto-test-run
- :id 27
+ :id 'F27
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "end of SomeMethod"
               :goto-beginning-of-match t)
@@ -368,7 +368,7 @@
               :comment-line  'end-of-scope))
 
 (csharpto-test-run
- :id 28
+ :id 'F28
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "\n +/\\* Block"
               :goto-beginning-of-match t)
@@ -385,7 +385,7 @@
               :comment-block 'beg-of-scope))
 
 (csharpto-test-run
- :id 29
+ :id 'F29
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find ".+ToString"
               :goto-beginning-of-match t)
