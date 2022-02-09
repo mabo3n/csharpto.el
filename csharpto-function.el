@@ -1,6 +1,10 @@
 ;;; csharpto-function.el --- C# function text object -*- lexical-binding: t -*-
 
+;;; Commentary:
+
 ;;; Code:
+
+(require 'subr-x)
 
 (rx-define line-comment (seq ?/ ?/ (0+ nonl)))
 (rx-define block-comment (seq ?/ ?* (*? anything) ?* ?/))
@@ -148,11 +152,11 @@ It should work in most cases given:
                       (open-scope-string (match-string-no-properties open-delimiter-group))
 
                       ;; This assumes there's no other declarations between functions
-                      (_ (goto-char (match-end header-group)))
+                      (header-end (goto-char (match-end header-group)))
                       (end-of-scope-regexp (funcall build-end-of-scope-regexp
                                                     indent-string
                                                     open-scope-string))
-                      (_ (re-search-forward end-of-scope-regexp nil t))
+                      (function-end (re-search-forward end-of-scope-regexp nil t))
 
                       (succeeding-blank-lines-beg (match-beginning succeeding-blank-lines-group))
                       (succeeding-blank-lines-end (match-end succeeding-blank-lines-group)))
