@@ -11,7 +11,7 @@
 (rx-define comment (or line-comment block-comment))
 (rx-define blank-or-comment (seq (0+ space) (opt comment)))
 
-(defun csharpto-get-function-range (&optional include-around)
+(defun csharpto--get-function-range (&optional include-around)
   "Return a line-wise range (BEG END) of function under point.
 
 If INCLUDE-AROUND is non-nil, include surrouding blank lines

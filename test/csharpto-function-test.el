@@ -69,8 +69,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "public MyEntity(string name)"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (421 581))
-        ((csharpto-get-function-range t)    (421 582)))
+ :test '(((csharpto--get-function-range nil) (421 581))
+        ((csharpto--get-function-range t)    (421 582)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -82,8 +82,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "^\n\s *int OneLiner()"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (581 582))
-         ((csharpto-get-function-range t)   (581 628)))
+ :test '(((csharpto--get-function-range nil) (581 582))
+         ((csharpto--get-function-range t)   (581 628)))
  :props (list :cursor-line   'blank
               :cursor-column 'beg-of-line))
 
@@ -92,8 +92,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "3 \\+ 4 \\+ 5; $"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (582 628))
-         ((csharpto-get-function-range t)   (582 630)))
+ :test '(((csharpto--get-function-range nil) (582 628))
+         ((csharpto--get-function-range t)   (582 630)))
  :props (list :scope-type    'expression
               :cursor-line   'body
               :cursor-column 'succeeding-blank))
@@ -103,8 +103,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "level = default\n\\s *)"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (630 768))
-         ((csharpto-get-function-range t)   (630 769)))
+ :test '(((csharpto--get-function-range nil) (630 768))
+         ((csharpto--get-function-range t)   (630 769)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :scope-lf      t
@@ -116,8 +116,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "return a \\+ b;"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (769 888))
-         ((csharpto-get-function-range t)   (769 891)))
+ :test '(((csharpto--get-function-range nil) (769 888))
+         ((csharpto--get-function-range t)   (769 891)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :cursor-line   'body
@@ -128,8 +128,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "\n\n.+IEnumerable"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (888 891))
-         ((csharpto-get-function-range t)   (888 1010)))
+ :test '(((csharpto--get-function-range nil) (888 891))
+         ((csharpto--get-function-range t)   (888 1010)))
  :props (list :cursor-line   'blank
               :cursor-column 'beg-of-line))
 
@@ -138,8 +138,8 @@
  :setup (list :file "./fixtures/Entity.cs"
               :find "=> this"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (891 1010))
-         ((csharpto-get-function-range t)   (888 1010)))
+ :test '(((csharpto--get-function-range nil) (891 1010))
+         ((csharpto--get-function-range t)   (888 1010)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'body
@@ -150,8 +150,8 @@
  :setup (list :file "./fixtures/ClassWithSingleFunction.cs"
               :find "^.+SomeFunction"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (128 290))
-         ((csharpto-get-function-range t)   (127 290)))
+ :test '(((csharpto--get-function-range nil) (128 290))
+         ((csharpto--get-function-range t)   (127 290)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :cursor-line   'signature
@@ -162,8 +162,8 @@
  :setup (list :file "./fixtures/Attributes.cs"
               :find "ChangeName() {"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (660 983))
-         ((csharpto-get-function-range t)   (659 983)))
+ :test '(((csharpto--get-function-range nil) (660 983))
+         ((csharpto--get-function-range t)   (659 983)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :attributes    'single-inline
@@ -175,8 +175,8 @@
  :setup (list :file "./fixtures/Attributes.cs"
               :find "^.+\\[Theory\\]"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (177 659))
-         ((csharpto-get-function-range t)   (177 660)))
+ :test '(((csharpto--get-function-range nil) (177 659))
+         ((csharpto--get-function-range t)   (177 660)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :scope-lf      t
@@ -189,8 +189,8 @@
  :setup (list :file "./fixtures/Attributes.cs"
               :find "() => new"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (177 659))
-         ((csharpto-get-function-range t)   (177 660)))
+ :test '(((csharpto--get-function-range nil) (177 659))
+         ((csharpto--get-function-range t)   (177 660)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :scope-lf      t
@@ -204,8 +204,8 @@
  :setup (list :file "./fixtures/ClassOnlyNoImports.cs"
               :find "Hello"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (035 129))
-         ((csharpto-get-function-range t)   (035 129)))
+ :test '(((csharpto--get-function-range nil) (035 129))
+         ((csharpto--get-function-range t)   (035 129)))
  :props (list :cursor-line   'signature))
 
 (csharpto-test-run
@@ -213,8 +213,8 @@
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "MinValue\n"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (282 616))
-         ((csharpto-get-function-range t)   (282 617)))
+ :test '(((csharpto--get-function-range nil) (282 616))
+         ((csharpto--get-function-range t)   (282 617)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -227,8 +227,8 @@
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "        \.First"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (617 795))
-         ((csharpto-get-function-range t)   (617 796)))
+ :test '(((csharpto--get-function-range nil) (617 795))
+         ((csharpto--get-function-range t)   (617 796)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :scope-lf      t
@@ -241,8 +241,8 @@
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "(owner),"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (1226 1517))
-         ((csharpto-get-function-range t)   (1225 1517)))
+ :test '(((csharpto--get-function-range nil) (1226 1517))
+         ((csharpto--get-function-range t)   (1225 1517)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -257,8 +257,8 @@
  :setup (list :file "./fixtures/Generics.cs"
               :find "=> default"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (63 97))
-         ((csharpto-get-function-range t)   (63 98)))
+ :test '(((csharpto--get-function-range nil) (63 97))
+         ((csharpto--get-function-range t)   (63 98)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'body
@@ -270,8 +270,8 @@
  :setup (list :file "./fixtures/Generics.cs"
               :find "T: new"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (98 197))
-         ((csharpto-get-function-range t)   (97 197)))
+ :test '(((csharpto--get-function-range nil) (98 197))
+         ((csharpto--get-function-range t)   (97 197)))
  :props (list :signature     'multi-line
               :scope-type    'brackets
               :cursor-line   'signature
@@ -284,8 +284,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find "Id = "
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (421 716))
-         ((csharpto-get-function-range t)   (421 717)))
+ :test '(((csharpto--get-function-range nil) (421 716))
+         ((csharpto--get-function-range t)   (421 717)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -298,8 +298,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find "OneLiner"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (717 805))
-         ((csharpto-get-function-range t)   (717 807)))
+ :test '(((csharpto--get-function-range nil) (717 805))
+         ((csharpto--get-function-range t)   (717 807)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'signature
@@ -311,8 +311,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find "void Log"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (807 1070))
-         ((csharpto-get-function-range t)   (807 1071)))
+ :test '(((csharpto--get-function-range nil) (807 1070))
+         ((csharpto--get-function-range t)   (807 1071)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :cursor-line   'signature
@@ -324,8 +324,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find "name=\"a\""
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1115 1490))
-         ((csharpto-get-function-range t)   (1115 1491)))
+ :test '(((csharpto--get-function-range nil) (1115 1490))
+         ((csharpto--get-function-range t)   (1115 1491)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :cursor-line   'comments
@@ -338,8 +338,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find (rx "x++")
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1491 1738))
-         ((csharpto-get-function-range t)   (1491 1739)))
+ :test '(((csharpto--get-function-range nil) (1491 1738))
+         ((csharpto--get-function-range t)   (1491 1739)))
  :props (list :signature     'multi-line
               :scope-type    'brackets
               :cursor-line   'body
@@ -352,8 +352,8 @@
  :setup (list :file "./fixtures/Comments.cs"
               :find ".+ToString"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1739 1925))
-         ((csharpto-get-function-range t)   (1738 1925)))
+ :test '(((csharpto--get-function-range nil) (1739 1925))
+         ((csharpto--get-function-range t)   (1738 1925)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'body
@@ -369,8 +369,8 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "This is a"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (428 676))
-         ((csharpto-get-function-range t)   (428 677)))
+ :test '(((csharpto--get-function-range nil) (428 676))
+         ((csharpto--get-function-range t)   (428 677)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
@@ -384,8 +384,8 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "//Comment$"
               :goto-beginning-of-match nil)
- :test '(((csharpto-get-function-range nil) (677 743))
-         ((csharpto-get-function-range t)   (677 744)))
+ :test '(((csharpto--get-function-range nil) (677 743))
+         ((csharpto--get-function-range t)   (677 744)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'signature
@@ -398,8 +398,8 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "void Log"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (744 959))
-         ((csharpto-get-function-range t)   (744 960)))
+ :test '(((csharpto--get-function-range nil) (744 959))
+         ((csharpto--get-function-range t)   (744 960)))
  :props (list :signature     'multi-line
               :scope-type    'expression
               :cursor-line   'signature
@@ -412,7 +412,7 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "end of SomeMethod"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1004 1232))
+ :test '(((csharpto--get-function-range nil) (1004 1232))
          ((csharpto-get-function-range t)   (1004 1233)))
  :props (list :signature     'single-line
               :scope-type    'brackets
