@@ -35,9 +35,13 @@
 (require 'evil)
 
 (evil-define-text-object csharpto-inner-function (count &optional beg end type)
+  "Select inner csharp function."
+  :type 'line
   (csharpto--get-function-range nil))
 
 (evil-define-text-object csharpto-a-function (count &optional beg end type)
+  "Select a csharp function."
+  :type 'line
   (csharpto--get-function-range t))
 
 (provide 'csharpto)
