@@ -70,7 +70,7 @@
               :find "public MyEntity(string name)"
               :goto-beginning-of-match t)
  :test '(((csharpto--get-function-range nil) (421 581))
-        ((csharpto--get-function-range t)    (421 582)))
+         ((csharpto--get-function-range t)   (421 582)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :scope-lf      t
