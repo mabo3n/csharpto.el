@@ -413,7 +413,7 @@
               :find "end of SomeMethod"
               :goto-beginning-of-match t)
  :test '(((csharpto--get-function-range nil) (1004 1232))
-         ((csharpto-get-function-range t)   (1004 1233)))
+         ((csharpto--get-function-range t)   (1004 1233)))
  :props (list :signature     'single-line
               :scope-type    'brackets
               :cursor-line   'end-of-scope
@@ -429,8 +429,8 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "\n +/\\* Block"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1299 1300))
-         ((csharpto-get-function-range t)   (1299 1558)))
+ :test '(((csharpto--get-function-range nil) (1299 1300))
+         ((csharpto--get-function-range t)   (1299 1558)))
  :props (list :signature     'multi-line
               :scope-type    'brackets
               :cursor-line   'preceding-blank
@@ -446,8 +446,8 @@
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find ".+ToString"
               :goto-beginning-of-match t)
- :test '(((csharpto-get-function-range nil) (1559 1956))
-         ((csharpto-get-function-range t)   (1558 1956)))
+ :test '(((csharpto--get-function-range nil) (1559 1956))
+         ((csharpto--get-function-range t)   (1558 1956)))
  :props (list :signature     'single-line
               :scope-type    'expression
               :cursor-line   'body
