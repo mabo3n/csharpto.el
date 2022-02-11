@@ -24,13 +24,18 @@ It should work in most cases given:
   (rx-let-eval '((line-comment (seq ?/ ?/ (0+ nonl)))
                  (block-comment (seq ?/ ?* (*? anything) ?* ?/))
                  (comment (or line-comment block-comment))
-                 (blank-or-comment (seq (0+ space) (opt comment))))
+                 (blank-or-comment (seq (0+ space) (opt comment)))
+                 (opt-extra-header-lines (indentation)
+                  (minimal-match
+                   (repeat 0 10 ?\n indentation (0+ space) (0+ nonl))))
+                 (opt-linefeed-before-open-scope-delimiter (indentation)
+                  (opt ?\n indentation (0+ space))))
     (let* ((preceding-blank-lines-group 1)
-           (header-group 2)
+           (contents-group 2)
            (comments-group 3)
            (indent-group 4)
            (attributes-group 5)
-           (signature-group 6)
+           (header-group 6)
            (open-delimiter-group 7)
            (header-regexp
             (rx-to-string
@@ -60,7 +65,7 @@ It should work in most cases given:
                           ;; followed by optional blank lines
                           (group-n ,preceding-blank-lines-group
                                    (0+ (seq (0+ space) ?\n))))))
-               (group-n ,header-group
+               (group-n ,contents-group
                         (group-n ,indent-group
                                  bol (0+ space))
                         (group-n ,comments-group
@@ -72,30 +77,30 @@ It should work in most cases given:
                         (group-n ,comments-group
                                  (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
                                           (backref ,indent-group) (0+ space))))
-                        (group-n ,signature-group
-                                 ;; Type or access modifier followed by a space:
-                                 (seq alpha
-                                      (opt (0+ (not (any ?\n ?=)))
-                                           (not (any ?\n ?\) ?= ?: ?, space)))
-                                      space)
-                                 ;; Anything with at least one "(" on 1st line
-                                 ;; (this with above prevents matching lambda
-                                 ;;  expressions but also classes/namespaces):
-                                 (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl))
-                                 ;; Optional multi-line signature:
-                                 (minimal-match
-                                  (repeat 0 10 (seq ?\n
-                                                    (backref ,indent-group)
-                                                    (0+ space)
-                                                    (0+ nonl))))
-                                 ;; ?\) (0+ space) ;; this would be nice but makes it too slow
-                                 ;; Optional line feed before scope opening:
-                                 (opt ?\n
-                                      (backref ,indent-group)
-                                      (0+ space))
-                                 (or (seq (group-n ,open-delimiter-group "{")
-                                          blank-or-comment eol)
-                                     (group-n ,open-delimiter-group "=>")))))))
+                        (group-n ,header-group
+                                 (or (seq
+                                      ;; Type or access modifier followed by a space:
+                                      (seq alpha
+                                           (opt (0+ (not (any ?\n ?=)))
+                                                (not (any ?\n ?\) ?= ?: ?, space)))
+                                           space)
+                                      ;; Anything with at least one "(" on 1st line
+                                      (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl))
+                                      (opt-extra-header-lines (backref ,indent-group))
+                                      (opt-linefeed-before-open-scope-delimiter (backref ,indent-group))
+                                      (or (seq (group-n ,open-delimiter-group "{")
+                                               blank-or-comment eol)
+                                          (group-n ,open-delimiter-group "=>")))
+
+                                     (seq
+                                      (seq alpha (0+ nonl) (not (any ?\n ?\;)))
+                                      (opt-extra-header-lines (backref ,indent-group))
+                                      ;; ?\) (0+ space) ;; this would be nice but makes it too slow
+                                      (opt-linefeed-before-open-scope-delimiter (backref ,indent-group))
+                                      (seq (group-n ,open-delimiter-group "{")
+                                           blank-or-comment eol)))
+
+                                 )))))
            (end-of-scope-group 8)
            (succeeding-blank-lines-group 9)
            (build-end-of-scope-regexp
@@ -104,6 +109,8 @@ It should work in most cases given:
               (let ((end-of-scope
                      (if (string= beg-of-scope-delimiter "=>")
                          ";"
+                       ;; TODO Accept a semi-colon "};" for generic
+                       ;; headers (not functions)
                        `(bol ,indent-string "}"))))
                 ;; FIXME Find last before indent shorter than functions'.
                 ;;       This is matching any statement
@@ -120,7 +127,7 @@ It should work in most cases given:
                       (match-data)))
                 (next-fun-match-data
                  (and (goto-char
-                       (or (and prev-fun-match-data (1- (match-end header-group)))
+                       (or (and prev-fun-match-data (1- (match-end contents-group)))
                            ;; try to go to beginning of empty lines
                            ;; to include all of them in the match
                            (and (re-search-backward (rx bol (0+ space) ?\n) nil t)
@@ -132,7 +139,7 @@ It should work in most cases given:
                       (match-data))))
            (cond
             ((and next-fun-match-data
-                  (>= p (match-beginning header-group)))
+                  (>= p (match-beginning contents-group)))
              (set-match-data next-fun-match-data))
             ((and next-fun-match-data
                   (>= p (match-beginning preceding-blank-lines-group)))
@@ -146,11 +153,11 @@ It should work in most cases given:
              (throw 'range '())))
 
            (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
-                       (header-line-beg   (match-beginning header-group))
+                       (header-line-beg   (match-beginning contents-group))
                        (header-text-beg   (match-end indent-group))
 
                        ;; This assumes there's no other declarations between functions
-                       (header-end (goto-char (match-end header-group)))
+                       (header-end (goto-char (match-end contents-group)))
 
                        (end-of-scope-regexp
                         (funcall build-end-of-scope-regexp
