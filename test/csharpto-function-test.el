@@ -68,7 +68,7 @@
 
 (csharpto--test-reset-buffer)
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F1
  :setup (list :file "./fixtures/Entity.cs"
               :find "public MyEntity(string name)"
@@ -81,7 +81,7 @@
               :cursor-line   'signature
               :cursor-column 'text))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F2
  :setup (list :file "./fixtures/Entity.cs"
               :find "^\n\s *int OneLiner()"
@@ -91,7 +91,7 @@
  :props (list :cursor-line   'blank
               :cursor-column 'beg-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F3
  :setup (list :file "./fixtures/Entity.cs"
               :find "\\+ 5; $"
@@ -102,7 +102,7 @@
               :cursor-line   'body
               :cursor-column 'succeeding-blank))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F4
  :setup (list :file "./fixtures/Entity.cs"
               :find "level = default\n\\s *)"
@@ -115,7 +115,7 @@
               :cursor-line   'signature
               :cursor-column 'preceding-blank))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F5
  :setup (list :file "./fixtures/Entity.cs"
               :find "return a \\+ b;"
@@ -127,7 +127,7 @@
               :cursor-line   'body
               :cursor-column 'end-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F6
  :setup (list :file "./fixtures/Entity.cs"
               :find "\n\n.+IEnumerable"
@@ -137,7 +137,7 @@
  :props (list :cursor-line   'blank
               :cursor-column 'beg-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F7
  :setup (list :file "./fixtures/Entity.cs"
               :find "=> this"
@@ -149,7 +149,7 @@
               :cursor-line   'body
               :cursor-column 'end-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F8
  :setup (list :file "./fixtures/ClassWithSingleFunction.cs"
               :find "^.+SomeFunction"
@@ -161,7 +161,7 @@
               :cursor-line   'signature
               :cursor-column 'beg-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F9
  :setup (list :file "./fixtures/Attributes.cs"
               :find "ChangeName() {"
@@ -174,7 +174,7 @@
               :cursor-line   'signature
               :cursor-column 'end-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F10
  :setup (list :file "./fixtures/Attributes.cs"
               :find "^.+\\[Theory\\]"
@@ -188,7 +188,7 @@
               :cursor-line   'attributes
               :cursor-column 'beg-of-line))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F11
  :setup (list :file "./fixtures/Attributes.cs"
               :find "() => new"
@@ -203,7 +203,7 @@
               :cursor-column 'text
               :item-under    'lambda-exp))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F12
  :setup (list :file "./fixtures/ClassOnlyNoImports.cs"
               :find "Hello"
@@ -212,7 +212,7 @@
          ((csharpto--get-function-range t)   (035 129)))
  :props (list :cursor-line   'signature))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F13
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "MinValue\n"
@@ -226,7 +226,7 @@
               :cursor-column 'beg-of-line
               :item-before  'lambda-exp))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F14
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "        \.First"
@@ -240,7 +240,7 @@
               :cursor-column 'preceding-blank
               :item-before   'lambda-exp))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F15
  :setup (list :file "./fixtures/BlogRepository.cs"
               :find "(owner),"
@@ -256,7 +256,7 @@
               :item-before   'lambda-exp
               :item-after    'lambda-exp))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F16
  :setup (list :file "./fixtures/Generics.cs"
               :find "=> default"
@@ -269,7 +269,7 @@
               :cursor-column 'text
               :generic-type  'single))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F17
  :setup (list :file "./fixtures/Generics.cs"
               :find "T: new"
@@ -283,7 +283,7 @@
               :generic-type  'multiple
               :type-constraint 'single))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F18
  :setup (list :file "./fixtures/Comments.cs"
               :find "Id = "
@@ -297,7 +297,7 @@
               :cursor-column 'text
               :comment-line  'above))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F19
  :setup (list :file "./fixtures/Comments.cs"
               :find "OneLiner"
@@ -310,7 +310,7 @@
               :cursor-column 'text
               :comment-line  'end-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F20
  :setup (list :file "./fixtures/Comments.cs"
               :find "void Log"
@@ -323,7 +323,7 @@
               :cursor-column 'text
               :comment-line  'signature))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F21
  :setup (list :file "./fixtures/Comments.cs"
               :find "name=\"a\""
@@ -337,7 +337,7 @@
               :comment-line  'above
               :comment-line  'end-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F22
  :setup (list :file "./fixtures/Comments.cs"
               :find (rx "x++")
@@ -351,7 +351,7 @@
               :comment-block 'above
               :comment-block 'beg-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F23
  :setup (list :file "./fixtures/Comments.cs"
               :find ".+ToString"
@@ -368,7 +368,7 @@
               :comment-line  'beg-of-scope
               :comment-line  'end-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F24
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "This is a"
@@ -383,7 +383,7 @@
               :attributes    'multiple-preceding
               :comment-line  'above-attributes))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F25
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "//Comment$"
@@ -397,7 +397,7 @@
               :attributes    'single-inline
               :comment-line  'end-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F26
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "void Log"
@@ -411,7 +411,7 @@
               :attributes    'multiple-preceding
               :comment-line  'signature))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F27
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "end of SomeMethod"
@@ -428,7 +428,7 @@
               :comment-line  'above
               :comment-line  'end-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F28
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find "\n +/\\* Block"
@@ -445,7 +445,7 @@
               :comment-block 'above
               :comment-block 'beg-of-scope))
 
-(csharpto-test-run
+(csharpto--test-run
  :id 'F29
  :setup (list :file "./fixtures/CommentsAndAttributes.cs"
               :find ".+ToString"

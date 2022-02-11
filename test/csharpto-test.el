@@ -168,7 +168,7 @@ beginning of match if GOTO-BEG-OF-MATCH is non-nil."
   (when goto-beg-of-match
     (goto-char (match-beginning 0))))
 
-(defun csharpto-test-run (&rest properties)
+(defun csharpto--test-run (&rest properties)
   "Run a test according to PROPERTIES.
 
 PROPERTIES is a property list (PROP1 VALUE1 PROP2 VALUE2 ...)
@@ -250,7 +250,7 @@ where the supported properties and their respective value are:
                 (csharpto--test-log-failure (point) returned-range expected-range))))))))
 
 (defun csharpto--test-visualize-range-at-point ()
-  "Visualize range of `csharpto-test-run' expectation at point.
+  "Visualize range of `csharpto--test-run' expectation at point.
 
 Open fixture file and visual select the range of expectation.
 
