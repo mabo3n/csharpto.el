@@ -33,7 +33,7 @@ It should work in most cases given:
     (let* ((preceding-blank-lines-group 1)
            (contents-group 2)
            (comments-group 3)
-           (indent-group 4)
+           (indentation-group 4)
            (attributes-group 5)
            (header-group 6)
            (open-delimiter-group 7)
@@ -66,17 +66,17 @@ It should work in most cases given:
                           (group-n ,preceding-blank-lines-group
                                    (0+ (seq (0+ space) ?\n))))))
                (group-n ,contents-group
-                        (group-n ,indent-group
+                        (group-n ,indentation-group
                                  bol (0+ space))
                         (group-n ,comments-group
                                  (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
-                                          (backref ,indent-group) (0+ space))))
+                                          (backref ,indentation-group) (0+ space))))
                         (group-n ,attributes-group ;; this also matches any comments in between
                                  (0+ (seq ?\[ (+? anything) ?\] (0+ space)
-                                          (opt ?\n (backref ,indent-group) (0+ space)))))
+                                          (opt ?\n (backref ,indentation-group) (0+ space)))))
                         (group-n ,comments-group
                                  (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
-                                          (backref ,indent-group) (0+ space))))
+                                          (backref ,indentation-group) (0+ space))))
                         (group-n ,header-group
                                  (or (seq
                                       ;; Type or access modifier followed by a space:
@@ -86,17 +86,17 @@ It should work in most cases given:
                                            space)
                                       ;; Anything with at least one "(" on 1st line
                                       (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl))
-                                      (opt-extra-header-lines (backref ,indent-group))
-                                      (opt-linefeed-before-open-scope-delimiter (backref ,indent-group))
+                                      (opt-extra-header-lines (backref ,indentation-group))
+                                      (opt-linefeed-before-open-scope-delimiter (backref ,indentation-group))
                                       (or (seq (group-n ,open-delimiter-group "{")
                                                blank-or-comment eol)
                                           (group-n ,open-delimiter-group "=>")))
 
                                      (seq
                                       (seq alpha (0+ nonl) (not (any ?\n ?\;)))
-                                      (opt-extra-header-lines (backref ,indent-group))
+                                      (opt-extra-header-lines (backref ,indentation-group))
                                       ;; ?\) (0+ space) ;; this would be nice but makes it too slow
-                                      (opt-linefeed-before-open-scope-delimiter (backref ,indent-group))
+                                      (opt-linefeed-before-open-scope-delimiter (backref ,indentation-group))
                                       (seq (group-n ,open-delimiter-group "{")
                                            blank-or-comment eol)))
 
@@ -104,15 +104,15 @@ It should work in most cases given:
            (end-of-scope-group 8)
            (succeeding-blank-lines-group 9)
            (build-end-of-scope-regexp
-            (lambda (indent-string beg-of-scope-delimiter)
+            (lambda (indentation beg-of-scope-delimiter)
               "Build a regexp matching the end of the function."
               (let ((end-of-scope
                      (if (string= beg-of-scope-delimiter "=>")
                          ";"
                        ;; TODO Accept a semi-colon "};" for generic
                        ;; headers (not functions)
-                       `(bol ,indent-string "}"))))
-                ;; FIXME Find last before indent shorter than functions'.
+                       `(bol ,indentation "}"))))
+                ;; FIXME Find last before indentation shorter than functions'.
                 ;;       This is matching any statement
                 (rx-to-string
                  `(seq (group-n ,end-of-scope-group
@@ -154,14 +154,14 @@ It should work in most cases given:
 
            (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
                        (header-line-beg   (match-beginning contents-group))
-                       (header-text-beg   (match-end indent-group))
+                       (header-text-beg   (match-end indentation-group))
 
                        ;; This assumes there's no other declarations between functions
                        (header-end (goto-char (match-end contents-group)))
 
                        (end-of-scope-regexp
                         (funcall build-end-of-scope-regexp
-                                 (match-string-no-properties indent-group)
+                                 (match-string-no-properties indentation-group)
                                  (match-string-no-properties open-delimiter-group)))
                        (function-end (re-search-forward end-of-scope-regexp nil t))
 
