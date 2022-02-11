@@ -62,6 +62,10 @@
                       (end-of-scope     . "There's a block comment \"/**/\" in the end of scope")
                       (below            . "There's a block comment \"/**/\" below the function")))))
 
+;; Press enter in a expectation below to visualize it
+(define-key evil-normal-state-local-map (kbd "<return>")
+  #'csharpto--test-visualize-range-at-point)
+
 (csharpto--test-reset-buffer)
 
 (csharpto-test-run

@@ -250,6 +250,34 @@ where the supported properties and their respective value are:
                 (csharpto--test-log-message "\n      ")
                 (csharpto--test-log-failure (point) returned-range expected-range))))))))
 
+(defun csharpto--test-visualize-range-at-point ()
+  "Visualize range of `csharpto-test-run' expectation at point.
+
+Open fixture file and visual select the range of expectation.
+
+This is a facility to debug tests, intended for interactive use."
+  (interactive)
+  (evil-exit-visual-state)
+  (let* ((p (point))
+         (range (read
+                 (and (re-search-forward (rx eol))
+                      (re-search-backward "csharpto--get-function-range")
+                      (re-search-forward (rx digit (+ (or digit space))))
+                      (goto-char (1- (point)))
+                      (thing-at-point 'list t))))
+         (fixture-path (save-match-data
+                         (and (re-search-backward ":file")
+                             (forward-symbol 2)
+                             (thing-at-point 'symbol t)))))
+    (goto-char (match-beginning 0))
+    (evil-visual-char)
+    (goto-char (match-end 0))
+    (find-file fixture-path)
+    (evil-exit-visual-state)
+    (goto-char (car range))
+    (evil-visual-char)
+    (goto-char (1- (cadr range)))))
+
 (provide 'csharpto-test)
 
 ;;; csharpto-test.el ends here
