@@ -31,11 +31,11 @@ It should work in most cases given:
                  (opt-linefeed-before-open-scope-delimiter (indentation)
                   (opt ?\n indentation (0+ space))))
     (let* ((preceding-blank-lines-group 1)
-           (contents-group 2)
+           (header-group 2)
            (comments-group 3)
            (indentation-group 4)
            (attributes-group 5)
-           (header-group 6)
+           (header-required-group 6)
            (open-delimiter-group 7)
            (header-regexp
             (rx-to-string
@@ -65,7 +65,7 @@ It should work in most cases given:
                           ;; followed by optional blank lines
                           (group-n ,preceding-blank-lines-group
                                    (0+ (seq (0+ space) ?\n))))))
-               (group-n ,contents-group
+               (group-n ,header-group
                         (group-n ,indentation-group
                                  bol (0+ space))
                         (group-n ,comments-group
@@ -77,7 +77,7 @@ It should work in most cases given:
                         (group-n ,comments-group
                                  (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
                                           (backref ,indentation-group) (0+ space))))
-                        (group-n ,header-group
+                        (group-n ,header-required-group
                                  (or (seq
                                       ;; Type or access modifier followed by a space:
                                       (seq alpha
@@ -127,7 +127,7 @@ It should work in most cases given:
                       (match-data)))
                 (next-fun-match-data
                  (and (goto-char
-                       (or (and prev-fun-match-data (1- (match-end contents-group)))
+                       (or (and prev-fun-match-data (1- (match-end header-group)))
                            ;; try to go to beginning of empty lines
                            ;; to include all of them in the match
                            (and (re-search-backward (rx bol (0+ space) ?\n) nil t)
@@ -139,7 +139,7 @@ It should work in most cases given:
                       (match-data))))
            (cond
             ((and next-fun-match-data
-                  (>= p (match-beginning contents-group)))
+                  (>= p (match-beginning header-group)))
              (set-match-data next-fun-match-data))
             ((and next-fun-match-data
                   (>= p (match-beginning preceding-blank-lines-group)))
@@ -153,11 +153,11 @@ It should work in most cases given:
              (throw 'range '())))
 
            (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
-                       (header-line-beg   (match-beginning contents-group))
+                       (header-line-beg   (match-beginning header-group))
                        (header-text-beg   (match-end indentation-group))
 
                        ;; This assumes there's no other declarations between functions
-                       (header-end (goto-char (match-end contents-group)))
+                       (header-end (goto-char (match-end header-group)))
 
                        (end-of-scope-regexp
                         (funcall build-end-of-scope-regexp
