@@ -147,14 +147,15 @@ It should work in most cases given:
 
            (when-let* ((preceding-blank-lines-beg (match-beginning preceding-blank-lines-group))
                        (header-line-beg   (match-beginning header-group))
-                       (indent-string     (match-string-no-properties indent-group))
-                       (open-scope-string (match-string-no-properties open-delimiter-group))
+                       (header-text-beg   (match-end indent-group))
 
                        ;; This assumes there's no other declarations between functions
                        (header-end (goto-char (match-end header-group)))
-                       (end-of-scope-regexp (funcall build-end-of-scope-regexp
-                                                     indent-string
-                                                     open-scope-string))
+
+                       (end-of-scope-regexp
+                        (funcall build-end-of-scope-regexp
+                                 (match-string-no-properties indent-group)
+                                 (match-string-no-properties open-delimiter-group)))
                        (function-end (re-search-forward end-of-scope-regexp nil t))
 
                        (succeeding-blank-lines-beg (match-beginning succeeding-blank-lines-group))
@@ -166,14 +167,17 @@ It should work in most cases given:
                (if (>= p header-line-beg)
                    (throw 'range
                           `(,(if (and include-around
+                                      ;; no succeeding blank lines
                                       (not (> (length (match-string
                                                        succeeding-blank-lines-group))
                                               0)))
                                  preceding-blank-lines-beg
-                               header-line-beg)
+                               (if include-around
+                                   header-line-beg
+                                 header-text-beg))
                             ,(if include-around
                                  (match-end 0)
-                               (match-end end-of-scope-group))))
+                               (1- (match-end end-of-scope-group)))))
                  (throw 'range
                         `(,preceding-blank-lines-beg
                           ,(match-end end-of-scope-group))))))))))))
