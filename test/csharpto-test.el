@@ -6,9 +6,10 @@
 
 ;;; Code:
 
-(require 'csharp-mode)
-(require 'dash)
 (require 'subr-x)
+(require 'dash)
+(require 'evil)
+(require 'csharp-mode)
 
 (defconst csharpto--test-buffer-name "*Test run*"
   "Name of the buffer created to output test results.")
@@ -58,8 +59,6 @@ properties, each one being a string or a list of strings."
   "If existent, kill the test buffer."
   (interactive)
   (ignore-errors (kill-buffer csharpto--test-buffer-name)))
-
-(csharpto--test-reset-buffer)
 
 (defun csharpto--test-log-message (format-string &rest args)
   "Log FORMAT-STRING with ARGS into the test run buffer."
