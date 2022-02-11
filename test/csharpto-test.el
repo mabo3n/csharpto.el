@@ -257,8 +257,7 @@ Open fixture file and visual select the range of expectation.
 This is a facility to debug tests, intended for interactive use."
   (interactive)
   (evil-exit-visual-state)
-  (let* ((p (point))
-         (range (read
+  (let* ((range (read
                  (and (re-search-forward (rx eol))
                       (re-search-backward "csharpto--get-function-range")
                       (re-search-forward (rx digit (+ (or digit space))))
