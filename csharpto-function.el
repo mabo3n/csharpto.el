@@ -146,7 +146,7 @@ It should work in most cases given:
                                   '(seq (0+ (any "}" ")"))
                                         "}"
                                         (0+ (any "}" ")"))
-                                        (opt ";"))
+                                        (opt (or ";" ",")))
                                 "}")))))
                 ;; FIXME Find last before indentation shorter than functions'.
                 ;;       This is matching any statement
