@@ -3,9 +3,9 @@
 ;; Author: mabo3n <dolly.marcel@gmail.com>
 ;; Maintainer: mabo3n
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "24.1") (evil "1"))
 ;; Homepage: https://github.com/mabo3n/csharpto
-;; Keywords: convenience, c
+;; Keywords: convenience, c, evil
 
 ;; This file is not part of GNU Emacs
 
@@ -25,9 +25,12 @@
 
 ;;; Commentary:
 
-;; Add evil text object definitions for some constructs in the C# language.
+;; Add evil text objects for some constructs in the C# language.
 ;; Currently supported:
-;;  - function
+;;  - [iF] `csharpto-i-FUNCTION': from first to last character of current function.
+;;  - [aF] `csharpto-a-FUNCTION': lines spamming current function + surrounding blank-lines.
+;;  - [iS] `csharpto-i-SCOPE': from first to last character of current statement with a scope.
+;;  - [aS] `csharpto-a-SCOPE': lines spamming current statement with a scope + surrounding blank lines.
 
 ;;; Code:
 
