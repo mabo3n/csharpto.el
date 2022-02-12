@@ -29,53 +29,54 @@ It should work in most cases given:
     nor anywhere inside an expression-bodied function;
   - There's no fields/properties between functions;
   - There's no weird indentation and comments."
-  (rx-let-eval '((line-comment (seq ?/ ?/ (0+ nonl)))
-                 (block-comment (seq ?/ ?* (*? anything) ?* ?/))
-                 (comment (or line-comment block-comment))
-                 (blank-or-comment (seq (0+ space) (opt comment)))
+  (rx-let-eval
+      '((line-comment (seq ?/ ?/ (0+ nonl)))
+        (block-comment (seq ?/ ?* (*? anything) ?* ?/))
+        (comment (or line-comment block-comment))
+        (blank-or-comment (seq (0+ space) (opt comment)))
 
-                 (build-scope-header (first-line-pattern
-                                      open-scope-pattern
-                                      indentation)
-                  (seq first-line-pattern
-                       ;; optional extra header-lines
-                       (minimal-match
-                        (repeat 0 10
-                                ?\n indentation (0+ space) (0+ nonl)))
-                       ;; optional lf before { or =>
-                       (opt ?\n indentation (0+ space))
-                       open-scope-pattern))
+        (build-scope-header (first-line-pattern open-scope-pattern indentation)
+         (seq first-line-pattern
+              ;; optional extra header-lines
+              (minimal-match
+               (repeat 0 10
+                       ?\n indentation (0+ space) (0+ nonl)))
+              ;; optional lf before { or =>
+              (opt ?\n indentation (0+ space))
+              open-scope-pattern))
 
-                 (function-signature (indentation open-delimiter-group)
-                  (build-scope-header
-                   ;first-line-pattern
-                   (seq
-                    ;; Type or access modifier followed by a space
-                    (seq alpha
-                         (opt (0+ (not (any ?\n ?=)))
-                              (not (any ?\n ?\) ?= ?: ?, space)))
-                         space)
-                    ;; Anything with at least one "(" on 1st line
-                    (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl)))
+        (function-signature (indentation open-delimiter-group)
+         (build-scope-header
 
-                   ;open-scope-pattern
-                   (or (seq (group-n open-delimiter-group "{")
-                            blank-or-comment eol)
-                       (group-n open-delimiter-group "=>"))
+          ;first-line-pattern
+          (seq
+           ;; Type or access modifier followed by a space
+           (seq alpha
+                (opt (0+ (not (any ?\n ?=)))
+                     (not (any ?\n ?\) ?= ?: ?, space)))
+                space)
+           ;; Anything with at least one "(" on 1st line
+           (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl)))
 
-                   indentation))
+          ;open-scope-pattern
+          (or (seq (group-n open-delimiter-group "{")
+                   blank-or-comment eol)
+              (group-n open-delimiter-group "=>"))
 
-                 (any-bracketed-scope-signature (indentation open-delimiter-group)
-                  (build-scope-header
-                   ;first-line-pattern
-                   ;; A letter + anything, not ending with ";"
-                   (seq alpha (0+ nonl) (not (any ?\n ?\;)))
+          indentation))
 
-                   ;open-scope-pattern
-                   (seq (group-n open-delimiter-group "{")
-                        blank-or-comment eol)
+        (any-bracketed-scope-signature (indentation open-delimiter-group)
+         (build-scope-header
+          ;first-line-pattern
+          ;; A letter + anything, not ending with ";"
+          (seq alpha (0+ nonl) (not (any ?\n ?\;)))
 
-                   indentation)))
+          ;open-scope-pattern
+          (seq (group-n open-delimiter-group "{")
+               blank-or-comment eol)
+
+          indentation)))
+
     (let* ((preceding-blank-lines-group 1)
            (header-group 2)
            (comments-group 3)
@@ -111,26 +112,27 @@ It should work in most cases given:
                           ;; followed by optional blank lines
                           (group-n ,preceding-blank-lines-group
                                    (0+ (seq (0+ space) ?\n))))))
-               (group-n ,header-group
-                        (group-n ,indentation-group
-                                 bol (0+ space))
-                        (group-n ,comments-group
-                                 (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
-                                          (backref ,indentation-group) (0+ space))))
-                        (group-n ,attributes-group ;; this also matches any comments in between
-                                 (0+ (seq ?\[ (+? anything) ?\] (0+ space)
-                                          (opt ?\n (backref ,indentation-group) (0+ space)))))
-                        (group-n ,comments-group
-                                 (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
-                                          (backref ,indentation-group) (0+ space))))
-                        (group-n ,header-required-group
-                                 (or (function-signature (backref ,indentation-group)
-                                                          ,open-delimiter-group)
+               (group-n
+                ,header-group
+                (group-n ,indentation-group
+                         bol (0+ space))
+                (group-n ,comments-group
+                         (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
+                                  (backref ,indentation-group) (0+ space))))
+                (group-n ,attributes-group ;; this also matches any comments in between
+                         (0+ (seq ?\[ (+? anything) ?\] (0+ space)
+                                  (opt ?\n (backref ,indentation-group) (0+ space)))))
+                (group-n ,comments-group
+                         (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
+                                  (backref ,indentation-group) (0+ space))))
+                (group-n ,header-required-group
+                         (or (function-signature
+                              (backref ,indentation-group) ,open-delimiter-group)
 
-                                     ,(if unrestricted
-                                          `(any-bracketed-scope-signature (backref ,indentation-group)
-                                                                          ,open-delimiter-group)
-                                        'unmatchable)))))))
+                             ,(if unrestricted
+                                  `(any-bracketed-scope-signature
+                                    (backref ,indentation-group) ,open-delimiter-group)
+                                'unmatchable)))))))
            (end-of-scope-group 8)
            (succeeding-blank-lines-group 9)
            (build-end-of-scope-regexp
@@ -158,7 +160,7 @@ It should work in most cases given:
                 (next-fun-match-data
                  (and (goto-char
                        (or (and prev-fun-match-data (1- (match-end header-group)))
-                           ;; try to go to beginning of empty lines
+                           ;; Try to go to beginning of empty lines
                            ;; to include all of them in the match
                            (and (re-search-backward (rx bol (0+ space) ?\n) nil t)
                                 (re-search-backward (rx (or buffer-start (not space))
@@ -204,7 +206,7 @@ It should work in most cases given:
                (if (>= p header-line-beg)
                    (throw 'range
                           `(,(if (and include-around
-                                      ;; no succeeding blank lines
+                                      ;no succeeding blank lines
                                       (not (> (length (match-string
                                                        succeeding-blank-lines-group))
                                               0)))
