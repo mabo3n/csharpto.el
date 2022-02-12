@@ -141,9 +141,13 @@ It should work in most cases given:
               (let ((end-of-scope
                      (if (string= beg-of-scope-delimiter "=>")
                          ";"
-                       ;; TODO Accept a semi-colon "};" for generic
-                       ;; headers (not functions)
-                       `(bol ,indentation "}"))))
+                       `(bol ,indentation
+                             ,(if unrestricted
+                                  '(seq (0+ (any "}" ")"))
+                                        "}"
+                                        (0+ (any "}" ")"))
+                                        (opt ";"))
+                                "}")))))
                 ;; FIXME Find last before indentation shorter than functions'.
                 ;;       This is matching any statement
                 (rx-to-string
