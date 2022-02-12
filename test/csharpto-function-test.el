@@ -2,6 +2,9 @@
 
 ;;; Commentary:
 
+;; Evaluate to run tests.
+;; Press <return> over a expectation (:test entry) to visualize it.
+
 ;;; Code:
 
 (require 'csharpto-function)

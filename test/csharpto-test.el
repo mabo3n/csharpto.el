@@ -2,7 +2,7 @@
 
 ;;; Commentary:
 
-;; Utility functions for writing tests.
+;; Custom test framework and utility functions for writing/debugging tests.
 
 ;;; Code:
 
