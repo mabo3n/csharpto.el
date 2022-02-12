@@ -58,8 +58,10 @@
 ;;; Bindings
 
 (defvar csharpto-default-bindings-alist
-  '(("if" . csharpto-inner-function)
-    ("af" . csharpto-a-function))
+  '(("iF" . csharpto-i-FUNCTION)
+    ("aF" . csharpto-a-FUNCTION)
+    ("iS" . csharpto-i-SCOPE)
+    ("aS" . csharpto-a-SCOPE))
   "Default bindings for the text objects.")
 
 (defun csharpto-bind-keys (&optional keymaps)
