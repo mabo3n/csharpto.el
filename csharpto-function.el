@@ -6,30 +6,76 @@
 
 (require 'subr-x)
 
-(defun csharpto--get-function-range (&optional include-around)
-  "Return a line-wise range (BEG END) of function under point.
+(defun csharpto--get-function-range (&optional include-around unrestricted)
+  "Return a range (BEG END) of the nearest function.
 
-If INCLUDE-AROUND is non-nil, include surrouding blank lines
-following vim-like conventions (return \"a\" function).
+This uses a heuristics-based approach with regular expressions to
+try to match the boundaries of the nearest function.
+Both regular and expression-bodied functions are supported.
 
-This uses a heuristic-based approach to find boudaries
-of regular/expression-bodied functions.
+If INCLUDE-AROUND is non-nil, include surrounding blank lines
+in the range (like `evil-a-paragraph' but for functions).
+
+If UNRESTRICTED is non-nil, return the range of the
+nearest scope, not restricted to functions. (Experimental feature)
+
+The function detection relies heavily on blank lines and indentation
+to work properly, so with \"badly\" formatted code it won't work
+out of the box.
 
 It should work in most cases given:
-  1. Functions are separated by blank lines;
-  2. There's no blank lines within a function signature,
-     nor anywhere inside an expression-bodied function;
-  3. There's no fields/properties between functions;
-  4. There's no weird indentation and comments."
+  - Functions are separated by [at least one] blank lines;
+  - There's no blank lines within a function signature,
+    nor anywhere inside an expression-bodied function;
+  - There's no fields/properties between functions;
+  - There's no weird indentation and comments."
   (rx-let-eval '((line-comment (seq ?/ ?/ (0+ nonl)))
                  (block-comment (seq ?/ ?* (*? anything) ?* ?/))
                  (comment (or line-comment block-comment))
                  (blank-or-comment (seq (0+ space) (opt comment)))
-                 (opt-extra-header-lines (indentation)
-                  (minimal-match
-                   (repeat 0 10 ?\n indentation (0+ space) (0+ nonl))))
-                 (opt-linefeed-before-open-scope-delimiter (indentation)
-                  (opt ?\n indentation (0+ space))))
+
+                 (build-scope-header (first-line-pattern
+                                      open-scope-pattern
+                                      indentation)
+                  (seq first-line-pattern
+                       ;; optional extra header-lines
+                       (minimal-match
+                        (repeat 0 10
+                                ?\n indentation (0+ space) (0+ nonl)))
+                       ;; optional lf before { or =>
+                       (opt ?\n indentation (0+ space))
+                       open-scope-pattern))
+
+                 (function-signature (indentation open-delimiter-group)
+                  (build-scope-header
+                   ;first-line-pattern
+                   (seq
+                    ;; Type or access modifier followed by a space
+                    (seq alpha
+                         (opt (0+ (not (any ?\n ?=)))
+                              (not (any ?\n ?\) ?= ?: ?, space)))
+                         space)
+                    ;; Anything with at least one "(" on 1st line
+                    (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl)))
+
+                   ;open-scope-pattern
+                   (or (seq (group-n open-delimiter-group "{")
+                            blank-or-comment eol)
+                       (group-n open-delimiter-group "=>"))
+
+                   indentation))
+
+                 (any-bracketed-scope-signature (indentation open-delimiter-group)
+                  (build-scope-header
+                   ;first-line-pattern
+                   ;; A letter + anything, not ending with ";"
+                   (seq alpha (0+ nonl) (not (any ?\n ?\;)))
+
+                   ;open-scope-pattern
+                   (seq (group-n open-delimiter-group "{")
+                        blank-or-comment eol)
+
+                   indentation)))
     (let* ((preceding-blank-lines-group 1)
            (header-group 2)
            (comments-group 3)
@@ -78,29 +124,13 @@ It should work in most cases given:
                                  (0+ (seq (or ?/ ?*) (0+ nonl) ?\n
                                           (backref ,indentation-group) (0+ space))))
                         (group-n ,header-required-group
-                                 (or (seq
-                                      ;; Type or access modifier followed by a space:
-                                      (seq alpha
-                                           (opt (0+ (not (any ?\n ?=)))
-                                                (not (any ?\n ?\) ?= ?: ?, space)))
-                                           space)
-                                      ;; Anything with at least one "(" on 1st line
-                                      (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl))
-                                      (opt-extra-header-lines (backref ,indentation-group))
-                                      (opt-linefeed-before-open-scope-delimiter (backref ,indentation-group))
-                                      (or (seq (group-n ,open-delimiter-group "{")
-                                               blank-or-comment eol)
-                                          (group-n ,open-delimiter-group "=>")))
+                                 (or (function-signature (backref ,indentation-group)
+                                                          ,open-delimiter-group)
 
-                                     (seq
-                                      (seq alpha (0+ nonl) (not (any ?\n ?\;)))
-                                      (opt-extra-header-lines (backref ,indentation-group))
-                                      ;; ?\) (0+ space) ;; this would be nice but makes it too slow
-                                      (opt-linefeed-before-open-scope-delimiter (backref ,indentation-group))
-                                      (seq (group-n ,open-delimiter-group "{")
-                                           blank-or-comment eol)))
-
-                                 )))))
+                                     ,(if unrestricted
+                                          `(any-bracketed-scope-signature (backref ,indentation-group)
+                                                                          ,open-delimiter-group)
+                                        'unmatchable)))))))
            (end-of-scope-group 8)
            (succeeding-blank-lines-group 9)
            (build-end-of-scope-regexp
