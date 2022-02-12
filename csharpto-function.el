@@ -50,13 +50,13 @@ It should work in most cases given:
 
           ;first-line-pattern
           (seq
-           ;; Type or access modifier followed by a space
+           ;; Type or access modifier followed by space(s)
            (seq alpha
                 (opt (0+ (not (any ?\n ?=)))
                      (not (any ?\n ?\) ?= ?: ?, space)))
-                space)
-           ;; Anything with at least one "(" on 1st line
-           (seq (1+ (not (any ?\n ?=))) ?\( (0+ nonl)))
+                (1+ space))
+           ;; Letter + anything with at least one "(" on 1st line
+           (seq alpha (1+ (not (any ?\n ?=))) ?\( (0+ nonl)))
 
           ;open-scope-pattern
           (or (seq (group-n open-delimiter-group "{")
