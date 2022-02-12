@@ -34,15 +34,26 @@
 (require 'csharpto-function)
 (require 'evil)
 
-(evil-define-text-object csharpto-inner-function (count &optional beg end type)
-  "Select inner csharp function."
-  :type 'inclusive
-  (csharpto--get-function-range nil))
+(evil-define-text-object csharpto-i-FUNCTION (count &optional beg end type)
+  "From first to last character of current function."
+  :type nil
+  (csharpto--get-function-range nil nil))
 
-(evil-define-text-object csharpto-a-function (count &optional beg end type)
-  "Select a csharp function."
-  :type 'inclusive
-  (csharpto--get-function-range t))
+(evil-define-text-object csharpto-a-FUNCTION (count &optional beg end type)
+  "Lines spamming current function + surrounding blank-lines."
+  :type nil
+  (csharpto--get-function-range t nil))
+
+(evil-define-text-object csharpto-i-SCOPE (count &optional beg end type)
+  "From first to last character of current statement with a scope."
+  :type nil
+  (csharpto--get-function-range nil t))
+
+(evil-define-text-object csharpto-a-SCOPE (count &optional beg end type)
+  "Lines spamming current statement with a scope + surrounding blank lines."
+  :type nil
+  (csharpto--get-function-range t t))
+
 
 ;;; Bindings
 
