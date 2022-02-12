@@ -33,6 +33,7 @@
                       (multiple-preceding . "The function has multiple preceding attributes")
                       (multiple-inline    . "The function has multiple inline attributes")))
    (:class-only    . "The file starts with the class definition (no namespace)")
+   (:no-blank-lines   . "There's no blank lines!")
    (:item-before   . ((none       . "There's nothing before the cursor inside the function")
                       (lambda-exp . "There's a lambda expression before the cursor inside the function")))
    (:item-under    . ((none       . "There's nothing under the cursor inside the function")
@@ -463,6 +464,17 @@
               :comment-line  'signature
               :comment-block 'signature
               :comment-line  'end-of-scope))
+
+(csharpto--test-run
+ :id 'F30
+ :setup (list :file "./fixtures/Entity.cs"
+              :find " +}\n}\n"
+              :goto-beginning-of-match t)
+ :test '(((csharpto--get-function-range nil) ())
+         ((csharpto--get-function-range t)   ()))
+ :props (list :cursor-line   'succeeding-blank
+              :no-blank-lines t))
+
 
 (provide 'csharpto-function-test)
 

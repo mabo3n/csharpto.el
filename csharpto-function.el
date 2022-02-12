@@ -202,18 +202,19 @@ It should work in most cases given:
                        (function-end (re-search-forward end-of-scope-regexp nil t))
 
                        (succeeding-blank-lines-beg (match-beginning succeeding-blank-lines-group))
-                       (succeeding-blank-lines-end (match-end succeeding-blank-lines-group)))
+                       (succeeding-blank-lines-end (match-end succeeding-blank-lines-group))
+                       (succeeding-blank-lines-count
+                        (length (match-string succeeding-blank-lines-group))))
 
              (if (>= p succeeding-blank-lines-beg)
-                 (throw 'range `(,succeeding-blank-lines-beg
-                                 ,succeeding-blank-lines-end))
+                 (throw 'range (if (> succeeding-blank-lines-count 0)
+                                   `(,succeeding-blank-lines-beg
+                                     ,succeeding-blank-lines-end)
+                                 '()))
                (if (>= p header-line-beg)
                    (throw 'range
                           `(,(if (and include-around
-                                      ;no succeeding blank lines
-                                      (not (> (length (match-string
-                                                       succeeding-blank-lines-group))
-                                              0)))
+                                      (= succeeding-blank-lines-count 0))
                                  preceding-blank-lines-beg
                                (if include-around
                                    header-line-beg
