@@ -2,9 +2,12 @@
 ** TODO Add tests for nested scopes
    Function should only match functions.
    Scopes should only match (nearest) scopes.
-** TODO Refactor =csharpto--get-function-range=
+** TODO Refactor ~csharpto--get-function-range~
    Code is a juggernault function hard to maintain.
    Make it a generic "get-scope-range" and use it for functions.
 ** TODO Implement a/i function/scope
-** TODO Take current region into consideration
-** TODO Implement COUNT
+** TODO Figure out how to package the files to publish them
+** TODO Adapt test framework to use ~ert~ or similar
+** TODO Run tests with GitHub CI
+** TODO Make the text objects take current region into consideration
+** TODO Implement COUNT on text objects
