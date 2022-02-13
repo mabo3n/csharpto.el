@@ -3,25 +3,24 @@
 
   This emacs extension aims to provide useful [[https://github.com/emacs-evil/evil][Evil]] text objects to facilitate the manipulation of C# code. Currently, the following are the available ones:
 
-  - =iF= ~csharpto-i-FUNCTION~: from first to last character of current function
+  - =af= ~csharpto-a-function~: from first to last character of current function
   - =aF= ~csharpto-a-FUNCTION~: lines spamming current function + surrounding blank lines
-  - =iS= ~csharpto-i-SCOPE~: from first to last character of current statement with a scope
+  - =as= ~csharpto-a-scope~: from first to last character of current statement with a scope
   - =aS= ~csharpto-a-SCOPE~: lines spamming current statement with a scope + surrounding blank lines
 
   And the ones planned to be available at some point:
 
   - =if= ~csharpto-i-function~: from first to last character of current function's body
-  - =af= ~csharpto-a-function~: lines spamming current function's body + spaces until "~{ }~"
+  - =iF= ~csharpto-i-FUNCTION~: lines spamming current function's body + spaces until "~{ }~"
   - =is= ~csharpto-i-scope~: from first to last character of current scope
-  - =as= ~csharpto-a-scope~: lines spamming current statement with a scope + spaces until "~{ }~"
+  - =iS= ~csharpto-i-SCOPE~: lines spamming current statement with a scope + spaces until "~{ }~"
 
 ** Behavior
-
    * Support for both regular ~{ }~ and expression-bodied ~=>~ syntax ✔
    * Support for [[https://en.wikipedia.org/wiki/Indentation_style#Allman_style][Allman]] and [[https://en.wikipedia.org/wiki/Indentation_style#K&R_style][K&R]] indentation styles ✔
    * Support for comments ~//~  ~/* */~ and ~[Attributes]~ ✔
 
-   The =a= text objects behave similar to ~evil-a-paragraph~, in which the surrounding blank lines/space are included in the match. This makes it easier to strip them from source code without messing up with the whitespaces and empty lines.
+   The upper cased text objects behave similar to ~evil-a-paragraph~, in which the surrounding blank lines/space are included in the match. This makes it easier to strip them from source code without messing up with the whitespaces and empty lines.
 
    /Scope/ text objects are still an experimental feature (untested), but they are built over function's and should be work fine.
 

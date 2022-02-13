@@ -26,18 +26,25 @@
 ;;; Commentary:
 
 ;; Add evil text objects for some constructs in the C# language.
+
 ;; Currently supported:
-;;  - [iF] `csharpto-i-FUNCTION': from first to last character of current function.
-;;  - [aF] `csharpto-a-FUNCTION': lines spamming current function + surrounding blank-lines.
-;;  - [iS] `csharpto-i-SCOPE': from first to last character of current statement with a scope.
-;;  - [aS] `csharpto-a-SCOPE': lines spamming current statement with a scope + surrounding blank lines.
+;;   - [af] `csharpto-a-function': from first to last character of current function
+;;   - [aF] `csharpto-a-FUNCTION': lines spamming current function + surrounding blank lines
+;;   - [as] `csharpto-a-scope': from first to last character of current statement with a scope
+;;   - [aS] `csharpto-a-SCOPE': lines spamming current statement with a scope + surrounding blank lines
+
+;; Planned to be supported:
+;;   - [if] `csharpto-i-function': from first to last character of current function's body
+;;   - [iF] `csharpto-i-FUNCTION': lines spamming current function's body + spaces until "~{ }~"
+;;   - [is] `csharpto-i-scope': from first to last character of current scope
+;;   - [iS] `csharpto-i-SCOPE': lines spamming current statement with a scope + spaces until "~{ }~"
 
 ;;; Code:
 
 (require 'csharpto-function)
 (require 'evil)
 
-(evil-define-text-object csharpto-i-FUNCTION (count &optional beg end type)
+(evil-define-text-object csharpto-a-function (count &optional beg end type)
   "From first to last character of current function."
   :type nil
   (csharpto--get-function-range nil nil))
@@ -47,7 +54,7 @@
   :type nil
   (csharpto--get-function-range t nil))
 
-(evil-define-text-object csharpto-i-SCOPE (count &optional beg end type)
+(evil-define-text-object csharpto-a-scope (count &optional beg end type)
   "From first to last character of current statement with a scope."
   :type nil
   (csharpto--get-function-range nil t))
@@ -61,9 +68,9 @@
 ;;; Bindings
 
 (defvar csharpto-default-bindings-alist
-  '(("iF" . csharpto-i-FUNCTION)
+  '(("as" . csharpto-a-function)
     ("aF" . csharpto-a-FUNCTION)
-    ("iS" . csharpto-i-SCOPE)
+    ("as" . csharpto-a-scope)
     ("aS" . csharpto-a-SCOPE))
   "Default bindings for the text objects.")
 
