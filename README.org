@@ -1,17 +1,51 @@
 * csharpto.el
-  *csharp* *t*​ext *o*​bjects
+  *csharp* *t* ext *o* bjects
 
-  This emacs extension aims to provide useful [[https://github.com/emacs-evil/evil][evil]] text objects for constructs of the C# language. Currently, only a "function" text object is supported.
-* TODO Usage
-* TODO Limitations
-  Performance hit with attributes/comments(?)
-  scopes within a function (if, try-catch, foreach, etc.)
-** TODO Disclaimer
-   Made with learning purposes.
-   Rudimentary test framework.
+  This emacs extension aims to provide useful [[https://github.com/emacs-evil/evil][evil]] text objects to facilitate the manipulation of C# code. Currently, the following are the supported (ticked) and planned to be supported (unticked) text objects:
 
+  - [X] *iF* ~csharpto-i-FUNCTION~: from first to last character of current function.
+  - [X] *aF* ~csharpto-a-FUNCTION~: lines spamming current function + surrounding blank-lines.
+  - [ ] *if* ~csharpto-i-function~: from first to last character of current function's body.
+  - [ ] *af* ~csharpto-a-function~: lines spamming current function's body + spaces until "={ }=".
+
+  - [X] *iS* ~csharpto-i-SCOPE~: from first to last character of current statement with a scope.
+  - [X] *aS* ~csharpto-a-SCOPE~: lines spamming current statement with a scope + surrounding blank lines.
+  - [ ] *is* ~csharpto-i-scope~: from first to last character of current scope.
+  - [ ] *as* ~csharpto-a-scope~: lines spamming current statement with a scope + spaces until "={ }=".
+
+  Both regular ={ }= and expression-bodied =\=>= syntaxes are supported.
+
+  The =a= text objects behave similar to =evil-a-paragraph=, in which the surrounding blank lines/space are included in the match. This makes it easier to strip them from source code without messing up with the whitespaces and empty lines.
+
+  Scope text objects are still a experimental feature (untested), but should work fine.
+
+  See Limitations and Why section below for more details.
+* Usage
+  1. Clone this repository in you machine, and make sure it is in your [[https://www.emacswiki.org/emacs/LoadPath][Load Path]].
+  2. Load =chsarpto= somewhere in your init files.
+  3. Customize the variable =csharpto-default-bindings-alist= if you're not comfortable with the default keybindings.
+  4. To test out the text objects in a buffer, open it and run =csharpto-bind-keys-locally=.
+     To set the keybindings globally for all buffers, run =csharpto-bind-keys=.
+     To set the keybindings only for =csharp-mode=, run =csharpto-use-default-bindings-in-csharp-mode=.
+
+* Limitations
+  This extension was created out of quick-and-dirty snippets of the author to make it easy to manipulate C# functions. And also to learn Emacs Lisp. It is still in "early" development. The text objects don't support a count argument and they don't take current selection (region) into consideration (yet).
+
+  Also, the implementation is backed up by a custom, heuristics-based approach with regular expressions. It does not make use of evil utilities and is not integrated with [[https://www.emacswiki.org/emacs/ThingAtPoint][thingatpt.el]]. It relies heavily on blank lines and proper indentation to work seamlessly, so with \"badly\" formatted code it won't work out of the box.
+
+  It should work in most cases given:
+
+  * Functions are separated by [at least one] blank lines;
+  * There's no blank lines within a function signature,
+    nor anywhere inside an expression-bodied function;
+  * There's no fields/properties between functions;
+  * There's no weird indentation and comments.
 * Why
-  It is useful (and efficient) to be able to operate over a function while editing programming files, as it is with words, sentences, paragraphs etc. while editing text. In C#, functions can be declared with the standard C-like syntax using curly brackets (={ }=) but also as an expression with (==>=), the so called [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/expression-bodied-members#methods][expression-bodied]] methods. Also, it is not unusual to find coding conventions where there's a line break before opening the scope. See some examples below:
+  It is useful (and efficient) to be able to operate over a function while editing programming files, as it is with words, sentences, paragraphs etc. while editing text.
+
+  This extension was created to make it easier to operate on C# functions, taking into account the idiosyncrasies of the language.
+
+  C# allows declaring functions with the standard C-like syntax using curly brackets ={ }=, and also also as expressions =\=>= (the so called [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/expression-bodied-members#methods][expression-bodied]] methods). Plus, it is not unusual to find coding conventions where a line break is used before opening scopes. For example:
 
   #+begin_src csharp
     class SomeClass {
@@ -46,17 +80,15 @@
     }
   #+end_src
 
-  In this case, although you yourself understand and can refer to the 5 declared functions, it is not that straightforward to do that with your fingers within the editor.
-
-  In some cases you can get around this issue with existing text objects.
+  We can easily recognize 5 declared functions above, but is not straightforward to refer to them with our fingers. In some cases you can get around this issue with existing text objects.
 
   For example, usually there are no empty lines within expression-bodied function declarations, so you can refer to them with the standard paragraph text objects (~evil-a-paragraph~ if you want the accompaining blank lines and ~evil-inner-paragraph~ if you don't). But that won't work if the function is the first/last/only one in the class.
 
-  If you only have bracketed functions with both the signature and the ={= spanning a single line (like ~Function2~ in the previous example), you can refer to them with the ~evil-indent-plus-i-indent-up-down~ text object provided by [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]]. But for that to work the cursor must be inside the function [body], and also not under an empty line, otherwise the operand will be the surrounding class's.
+  If you only have bracketed functions with both the signature and the ={= spanning a single line (like ~Function2~ in the previous example), you can refer to them with the ~evil-indent-plus-i-indent-up-down~ text object from [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]]. But for that to work the cursor must be inside the function (body), and also not under an empty line, otherwise the operand will be the surrounding class.
 
-  If the function signature spans multiple lines, or there's a line break before opening the scope, or even if the function have [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to them, there's no easy way to refer to it even though you call it a "function" or "method".
+  But if a function's signature spans multiple lines, or there's a line break before opening its scope, or even it has [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to it, there's no easy way to refer to whole function even though you call it a "function" or "method".
 
-  Well, actually now there is. In the example below, to delete the whole function including the next empty line, instead of trying to hack your way with the visual mode (e.g. =viJjokkd= with [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]] or =V3ko8jd= with relative line numbers), you can just press =daf= (or any other keybinding you chose) to delete an ~evil-a-csharpto-function~.
+  Well, actually now there is. In the example below, to delete the whole function including the next empty line, instead of trying to hack your way with the visual mode (e.g. =viJjokkd= with [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]] or =V3ko8jd= with relative line numbers), you can just press =daf= (or any other keybinding you chose) to delete a ~csharpto-a-function~.
 
   #+begin_src csharp
     public class PersonTests
@@ -77,3 +109,4 @@
     }
   #+end_src
 
+  More examples of supported syntaxes can be found in the files [[./test/fixtures/][here]].
