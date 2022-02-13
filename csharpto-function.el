@@ -39,8 +39,7 @@ It should work in most cases given:
          (seq first-line-pattern
               ;; optional extra header-lines
               (minimal-match
-               (repeat 0 10
-                       ?\n indentation (0+ space) (0+ nonl)))
+               (0+ ?\n indentation (0+ space) (0+ nonl)))
               ;; optional lf before { or =>
               (opt ?\n indentation (0+ space))
               open-scope-pattern))
