@@ -260,7 +260,7 @@ This is a facility to debug tests, intended for interactive use."
   (let* ((range (read
                  (and (re-search-forward (rx eol))
                       (re-search-backward "csharpto--get-function-range")
-                      (re-search-forward (rx digit (+ (or digit space))))
+                      (re-search-forward (rx " (" (0+ (or digit space)) ")"))
                       (goto-char (1- (point)))
                       (thing-at-point 'list t))))
          (fixture-path (save-match-data
@@ -272,9 +272,10 @@ This is a facility to debug tests, intended for interactive use."
     (goto-char (match-end 0))
     (find-file fixture-path)
     (evil-exit-visual-state)
-    (goto-char (car range))
-    (evil-visual-char)
-    (goto-char (1- (cadr range)))))
+    (when range
+      (goto-char (car range))
+      (evil-visual-char)
+      (goto-char (1- (cadr range))))))
 
 (provide 'csharpto-test)
 
