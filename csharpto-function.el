@@ -8,7 +8,7 @@
 
 (defun csharpto--get-function-range
     (&optional include-around body-only unrestricted)
-  "Return a range (BEG END) of the nearest function.
+  "Return a range (BEG END) of the current function.
 
 This uses a heuristics-based approach with regular expressions to
 try to match the boundaries of the nearest function.
@@ -17,8 +17,13 @@ Both regular and expression-bodied functions are supported.
 If INCLUDE-AROUND is non-nil, include surrounding blank lines
 in the range (like `evil-a-paragraph' but for functions).
 
-If UNRESTRICTED is non-nil, return the range of the
-nearest scope, not restricted to functions. (Experimental feature)
+If BODY-ONLY is non-nil, match and return the range of the
+contents (body) of the function. With INCLUDE-AROUND also non-nil,
+include the spaces/blank lines until the start \"{\"/\"=>\" and
+end \"}\"/\";\" of the scope.
+
+If UNRESTRICTED is non-nil, act on the current (any) statement with
+a scope instead, not restricted to functions. (Experimental feature)
 
 The function detection relies heavily on blank lines and indentation
 to work properly, so with \"badly\" formatted code it won't work
@@ -38,7 +43,8 @@ It should work in most cases given:
         (header-required-group 6)
         (open-delimiter-group 7)
         (end-of-scope-group 8)
-        (succeeding-blank-lines-group 9))
+        (close-delimiter-group 9)
+        (succeeding-blank-lines-group 10))
     (rx-let-eval
         '((line-comment (seq ?/ ?/ (0+ nonl)))
           (block-comment (seq ?/ ?* (*? anything) ?* ?/))
@@ -144,11 +150,12 @@ It should work in most cases given:
                 (let* ((lambda-exp-p (string= beg-of-scope-delimiter "=>"))
                        (end-of-scope-pattern
                         (if lambda-exp-p
-                            ";"
+                            `((group-n ,close-delimiter-group ";"))
                           `(bol ,indentation
-                                ,(if unrestricted
-                                     'end-of-unrestricted-scope-chars
-                                   "}")))))
+                                (group-n ,close-delimiter-group
+                                         ,(if unrestricted
+                                              'end-of-unrestricted-scope-chars
+                                            "}"))))))
                   ;; FIXME Find last before indentation shorter than functions'.
                   ;;       This is matching any statement
                   (rx-to-string
@@ -180,10 +187,12 @@ It should work in most cases given:
                 (set-match-data next-fun-match-data))
                ((and next-fun-match-data
                      (>= p (match-beginning preceding-blank-lines-group)))
-                (if include-around
-                    (set-match-data next-fun-match-data)
-                  (throw 'range `(,(match-beginning preceding-blank-lines-group)
-                                  ,(match-end       preceding-blank-lines-group)))))
+                (if body-only
+                    (throw 'range '())
+                  (if include-around
+                      (set-match-data next-fun-match-data)
+                    (throw 'range `(,(match-beginning preceding-blank-lines-group)
+                                    ,(match-end       preceding-blank-lines-group))))))
                (prev-fun-match-data
                 (set-match-data prev-fun-match-data))
                (t
@@ -197,36 +206,57 @@ It should work in most cases given:
                    ;; This assumes there's no other declarations between functions
                    (header-end (goto-char (match-end header-group)))
 
+                   (indentation    (match-string-no-properties indentation-group))
+                   (open-delimiter (match-string-no-properties open-delimiter-group))
                    (end-of-scope-regexp
-                    (funcall build-end-of-scope-regexp
-                             (match-string-no-properties indentation-group)
-                             (match-string-no-properties open-delimiter-group)))
+                    (funcall build-end-of-scope-regexp indentation open-delimiter))
                    (function-end (re-search-forward end-of-scope-regexp nil t))
 
+                   (close-delimiter-beg        (match-beginning close-delimiter-group))
                    (succeeding-blank-lines-beg (match-beginning succeeding-blank-lines-group))
-                   (succeeding-blank-lines-end (match-end       succeeding-blank-lines-group))
-                   (succeeding-blank-lines-count
-                    (length (match-string succeeding-blank-lines-group))))
+                   (succeeding-blank-lines-end (match-end       succeeding-blank-lines-group)))
 
-                (if (>= p succeeding-blank-lines-beg)
-                    (throw 'range (if (> succeeding-blank-lines-count 0)
-                                      `(,succeeding-blank-lines-beg
-                                        ,succeeding-blank-lines-end)
-                                    '()))
-                  (if (>= p header-line-beg)
+                (let ((succeeding-blank-lines-p
+                       (> (length (match-string succeeding-blank-lines-group))
+                          0))
+                      (lambda-exp-p (string= open-delimiter "=>")))
+
+                  (if (>= p succeeding-blank-lines-beg)
+                      (throw 'range (if (and succeeding-blank-lines-p
+                                             (not body-only))
+                                        `(,succeeding-blank-lines-beg
+                                          ,succeeding-blank-lines-end)
+                                      '()))
+                    (if (>= p header-line-beg)
+                        (if body-only
+                            (throw 'range
+                                   `(,(and (goto-char header-end)
+                                           (if include-around
+                                               (point)
+                                             (1- (re-search-forward
+                                                  (rx (not (any space ?\n)))))))
+                                     ,(and (goto-char close-delimiter-beg)
+                                           (if lambda-exp-p
+                                               (1+ (point))
+                                             (if include-around
+                                                (point)
+                                              (1+ (re-search-backward
+                                                   (rx (not (any space ?\n))))))))))
+                          (throw 'range
+                                 `(,(if (and include-around
+                                             (not succeeding-blank-lines-p))
+                                        preceding-blank-lines-beg
+                                      (if include-around
+                                          header-line-beg
+                                        header-text-beg))
+                                   ,(if include-around
+                                        (match-end 0)
+                                      (1- (match-end end-of-scope-group))))))
                       (throw 'range
-                             `(,(if (and include-around
-                                         (= succeeding-blank-lines-count 0))
-                                    preceding-blank-lines-beg
-                                  (if include-around
-                                      header-line-beg
-                                    header-text-beg))
-                               ,(if include-around
-                                    (match-end 0)
-                                  (1- (match-end end-of-scope-group)))))
-                    (throw 'range
-                           `(,preceding-blank-lines-beg
-                             ,(match-end end-of-scope-group)))))))))))))
+                             (if body-only
+                                 '()
+                               `(,preceding-blank-lines-beg
+                                 ,(match-end end-of-scope-group)))))))))))))))
 
 (provide 'csharpto-function)
 
