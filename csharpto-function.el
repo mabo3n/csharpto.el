@@ -6,7 +6,8 @@
 
 (require 'subr-x)
 
-(defun csharpto--get-function-range (&optional include-around unrestricted)
+(defun csharpto--get-function-range
+    (&optional include-around body-only unrestricted)
   "Return a range (BEG END) of the nearest function.
 
 This uses a heuristics-based approach with regular expressions to

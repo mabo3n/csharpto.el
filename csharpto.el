@@ -30,14 +30,12 @@
 ;; Currently supported:
 ;;   - [af] `csharpto-a-function': from first to last character of current function
 ;;   - [aF] `csharpto-a-FUNCTION': lines spamming current function + surrounding blank lines
+;;   - [if] `csharpto-i-function': from first to last character of current function's body
+;;   - [iF] `csharpto-i-FUNCTION': lines spamming current function's body + spaces until "{ }"
 ;;   - [as] `csharpto-a-scope': from first to last character of current statement with a scope
 ;;   - [aS] `csharpto-a-SCOPE': lines spamming current statement with a scope + surrounding blank lines
-
-;; Planned to be supported:
-;;   - [if] `csharpto-i-function': from first to last character of current function's body
-;;   - [iF] `csharpto-i-FUNCTION': lines spamming current function's body + spaces until "~{ }~"
-;;   - [is] `csharpto-i-scope': from first to last character of current scope
-;;   - [iS] `csharpto-i-SCOPE': lines spamming current statement with a scope + spaces until "~{ }~"
+;;   - [is] `csharpto-i-scope': from first to last character of current statement's scope
+;;   - [iS] `csharpto-i-SCOPE': lines spamming current statement's scope + spaces until "{ }"
 
 ;;; Code:
 
@@ -47,31 +45,53 @@
 (evil-define-text-object csharpto-a-function (count &optional beg end type)
   "From first to last character of current function."
   :type nil
-  (csharpto--get-function-range nil nil))
+  (csharpto--get-function-range nil nil nil))
 
 (evil-define-text-object csharpto-a-FUNCTION (count &optional beg end type)
   "Lines spamming current function + surrounding blank-lines."
   :type nil
-  (csharpto--get-function-range t nil))
+  (csharpto--get-function-range t nil nil))
+
+(evil-define-text-object csharpto-i-function (count &optional beg end type)
+  "From first to last character of current function's body."
+  :type nil
+  (csharpto--get-function-range nil t nil))
+
+(evil-define-text-object csharpto-i-FUNCTION (count &optional beg end type)
+  "Lines spamming current function's body + spaces until \"{ }\"."
+  :type nil
+  (csharpto--get-function-range t t nil))
 
 (evil-define-text-object csharpto-a-scope (count &optional beg end type)
   "From first to last character of current statement with a scope."
   :type nil
-  (csharpto--get-function-range nil t))
+  (csharpto--get-function-range nil nil t))
 
 (evil-define-text-object csharpto-a-SCOPE (count &optional beg end type)
   "Lines spamming current statement with a scope + surrounding blank lines."
   :type nil
-  (csharpto--get-function-range t t))
+  (csharpto--get-function-range t nil t))
 
+(evil-define-text-object csharpto-i-scope ()
+  "From first to last character of current statement's scope."
+  :type nil
+  (csharpto--get-function-range nil t t))
 
-;;; Bindings
+(evil-define-text-object csharpto-i-SCOPE ()
+  "Lines spamming current statement's scope + spaces until \"{ }\"."
+  :type nil
+  (csharpto--get-function-range t t t))
 
+;; Bindings
 (defvar csharpto-default-bindings-alist
-  '(("as" . csharpto-a-function)
+  '(("af" . csharpto-a-function)
     ("aF" . csharpto-a-FUNCTION)
+    ("if" . csharpto-i-function)
+    ("iF" . csharpto-i-FUNCTION)
     ("as" . csharpto-a-scope)
-    ("aS" . csharpto-a-SCOPE))
+    ("aS" . csharpto-a-SCOPE)
+    ("is" . csharpto-i-scope)
+    ("iS" . csharpto-i-SCOPE))
   "Default bindings for the text objects.")
 
 (defun csharpto--bind-keys (keymaps)
