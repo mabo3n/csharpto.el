@@ -5,6 +5,20 @@
 ** TODO Refactor ~csharpto--get-function-range~
    Code is a juggernault function hard to maintain.
    Make it a generic "get-scope-range" and use it for functions.
+** TODO Fix text objects not matching an one-liner, bracketed function
+** TODO Fix *scope* text objects not matching whole function when under a scope
+   #+begin_src csharp
+     bool IsEven(int x)
+     {
+         if (x % 2 == 0)
+         {
+             return true;
+         }
+
+         // If cursor is here scope text objects select the line above
+         return false;
+     }
+   #+end_src
 ** TODO Implement a/i function/scope
 ** TODO Figure out how to package the files to publish them
 ** TODO Adapt test framework to use ~ert~ or similar
