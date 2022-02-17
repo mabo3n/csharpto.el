@@ -72,12 +72,12 @@
   :type nil
   (csharpto--get-function-range t nil t))
 
-(evil-define-text-object csharpto-i-scope ()
+(evil-define-text-object csharpto-i-scope (count &optional beg end type)
   "From first to last character of current statement's scope."
   :type nil
   (csharpto--get-function-range nil t t))
 
-(evil-define-text-object csharpto-i-SCOPE ()
+(evil-define-text-object csharpto-i-SCOPE (count &optional beg end type)
   "Lines spamming current statement's scope + spaces until \"{ }\"."
   :type nil
   (csharpto--get-function-range t t t))
