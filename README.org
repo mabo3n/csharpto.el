@@ -5,37 +5,36 @@
 
   - =af= ~csharpto-a-function~: from first to last character of current function
   - =aF= ~csharpto-a-FUNCTION~: lines spamming current function + surrounding blank lines
-  - =as= ~csharpto-a-scope~: from first to last character of current statement with a scope
-  - =aS= ~csharpto-a-SCOPE~: lines spamming current statement with a scope + surrounding blank lines
-
-  And the ones planned to be available at some point:
-
   - =if= ~csharpto-i-function~: from first to last character of current function's body
   - =iF= ~csharpto-i-FUNCTION~: lines spamming current function's body + spaces until "~{ }~"
-  - =is= ~csharpto-i-scope~: from first to last character of current scope
-  - =iS= ~csharpto-i-SCOPE~: lines spamming current statement with a scope + spaces until "~{ }~"
+  - =as= ~csharpto-a-scope~: from first to last character of current statement with a scope
+  - =aS= ~csharpto-a-SCOPE~: lines spamming current statement with a scope + surrounding blank lines
+  - =is= ~csharpto-i-scope~: from first to last character of current statement's scope
+  - =iS= ~csharpto-i-SCOPE~: lines spamming current statement's scope + spaces until "~{ }~"
 
 ** Behavior
    * Support for both regular ~{ }~ and expression-bodied ~=>~ syntax ✔
    * Support for [[https://en.wikipedia.org/wiki/Indentation_style#Allman_style][Allman]] and [[https://en.wikipedia.org/wiki/Indentation_style#K&R_style][K&R]] indentation styles ✔
    * Support for comments ~//~  ~/* */~ and ~[Attributes]~ ✔
 
-   The upper cased text objects behave similar to ~evil-a-paragraph~, in which the surrounding blank lines/space are included in the match. This makes it easier to strip them from source code without messing up with the whitespaces and empty lines.
+   The adopted convention is that *i/a* stands for *inner/outer* content and *OBJECT* (upper-cased) stands for *object* with surrounding blank lines/spaces.
 
-   /Scope/ text objects are still an experimental feature (untested), but they are built over function's and should be work fine.
+   The ~csharpto-a-FUNCTION~ and ~csharpto-a-SCOPE~ in particular behave similarly to ~evil-a-paragraph~, in which they include the surrounding blank lines. This makes it easy to strip them from source code without messing up with what is left.
+
+   /Scope/ text objects are still an experimental feature (untested), but they are built over function's and should work fine.
 
    See Limitations and Why sections below for more details.
 ** Usage
    1. Clone this repository in you machine, and make sure it is in your [[https://www.emacswiki.org/emacs/LoadPath][Load Path]].
    2. Load it ~(require csharpto)~ somewhere in your init files.
-   3. Customize the variable ~csharpto-default-bindings-alist~ if you're not comfortable with the default keybindings.
-   4. To test out the text objects in a buffer, open it and run ~csharpto-bind-keys-locally~.
-      To set the keybindings globally for all buffers, run ~csharpto-bind-keys-globally~.
-      To set the keybindings only for ~csharp-mode~, run ~csharpto-use-default-bindings-in-csharp-mode~.
+   3. Customize the variable ~csharpto-default-bindings-alist~ if you're not comfortable with the default keybindings (note that /scope/ text objects are bound to *s/S*, hiding the existent /sentence/ text objects).
+   4. To test out the text objects in a buffer, open it and call ~csharpto-bind-keys-locally~.
+      To set the keybindings globally for all buffers, call ~csharpto-bind-keys-globally~.
+      To set the keybindings dynamically only for ~csharp-mode~, call ~csharpto-use-default-bindings-in-csharp-mode~.
 ** Limitations
-   This extension was created out of quick-and-dirty snippets of the author to make it easy to manipulate C# functions. And also to learn Emacs Lisp. It is still in early development. The text objects don't support a count argument and they don't take current selection (region) into account (yet).
+   This extension is still in early development. The text objects don't support a count argument and they don't take current selection (region) into account (yet).
 
-   Also, the implementation is backed by a custom, heuristics-based approach using regular expressions, which doesn't make use of Evil utilities and is not integrated with [[https://www.emacswiki.org/emacs/ThingAtPoint][thingatpt.el]]. It relies heavily on blank lines and proper indentation to work seamlessly, so with \"badly\" formatted code it won't work out of the box.
+   The implementation is backed by a custom, heuristics-based approach using regular expressions, which doesn't make use of Evil utilities and is not integrated with [[https://www.emacswiki.org/emacs/ThingAtPoint][thingatpt.el]] (let alone that it became complicated and needs a clean up). It relies heavily on blank lines and proper indentation to work seamlessly, so with \"badly\" formatted code it won't work out of the box.
 
    It should work in most cases given:
 
@@ -84,15 +83,15 @@
      }
    #+end_src
 
-   We can easily recognize 5 declared functions above, but is not straightforward to refer to them with our fingers. In some cases you can get around this issue with existing text objects.
+   We can easily recognize 5 declared functions above, but is not straightforward to refer to them with our fingers. In some cases it is possible to get around this with existing text objects.
 
    For example, usually there are no empty lines within expression-bodied function declarations, so you can refer to them with the standard paragraph text objects (~evil-a-paragraph~ if you want the accompaining blank lines and ~evil-inner-paragraph~ if you don't). But that won't work if the function is the first/last/only one in the class.
 
-   If you only have bracketed functions with both the signature and the ={= spanning a single line (like =Function2= in the previous example), you can refer to them with the ~evil-indent-plus-i-indent-up-down~ text object from [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]]. But for that to work the cursor must be inside the function (body), and also not under an empty line, otherwise the operand will be the whole surrounding class.
+   If you only have bracketed functions with both the signature and the ={= spanning a single line (like =Function2= in the previous example), you can select them with the ~evil-indent-plus-i-indent-up-down~ text object from [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]]. But for that to work the cursor must be inside the function (body), and also not under an empty line, otherwise the operand will be the whole surrounding class.
 
-   But if a function's signature spans multiple lines, or there's a line break before opening its scope, or even it has [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to it, there's no easy way to refer to whole function even though you call it a "function" or "method".
+   But if a function's signature spans multiple lines, or there's a line break before opening its scope, or even it has [[https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/attributes/][attributes]] or comments tied to it, there's no easy way to refer to the whole function even though you call it a "function" or "method".
 
-   Well, actually now there is. In the example below, to delete the first function from the class, instead of trying to hack your way through visual mode (e.g. =viJjokkd= with [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]] or =V3ko9jd= with relative line numbers), you can just press =daF= (or any other keybinding you chose) to delete a ~csharpto-a-FUNCTION~:
+   Well, actually now there is! Take the example below, to delete the first function from the class, instead of trying to hack your way through visual mode (e.g. =viJjokkd= with [[http://github.com/TheBB/evil-indent-plus][evil-indent-plus]] or =V3ko9jd= with relative line numbers), you can just press =daF= (or any other keybinding you chose) to delete a ~csharpto-a-FUNCTION~:
 
    #+begin_src csharp
      namespace Tests
@@ -132,4 +131,6 @@
      }
    #+end_src
 
-   For the second function, it will work the same way. More examples of some supported syntaxes can be found in the files [[./test/fixtures/][here]].
+   Within the other (second) function, despite the unorthodox syntax, it works the same way.
+
+   More examples of supported syntaxes can be found in [[./test/fixtures/][these]] fixture files.
