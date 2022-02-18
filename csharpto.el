@@ -1,6 +1,6 @@
 ;;; csharpto.el --- C# text objects -*- lexical-binding: t -*-
 
-;; Author: mabo3n <dolly.marcel@gmail.com>
+;; Author: mabo3n <https://github.com/mabo3n/>
 ;; Maintainer: mabo3n
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "24.1") (evil "1"))
